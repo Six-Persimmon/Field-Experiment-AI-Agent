@@ -1,3 +1,5 @@
 # Field-Experiment-AI-Agent
 
-Authors: Sichen Zhong
+AI Agent framework for conducting consumer behavior experiments.
+
+Authors: Shijian Liu (NYU),  Sichen Zhong (NYU)
