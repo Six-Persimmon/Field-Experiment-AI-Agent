@@ -38,6 +38,22 @@ class Survey(BaseModel):
     purpose: str
     questions: List[Question]
 
+# Comment model
+class QuestionComment(BaseModel):
+    question_id: str
+    comment: str
+
+# Annoted Survey model
+class AnnotatedSurvey(BaseModel):
+    survey: Survey
+    question_comments: List[QuestionComment]
+    overall_comment: Optional[str]
+
+# Improvement final output model
+class SurveyImprovementResult(BaseModel):
+    original_with_comments: AnnotatedSurvey
+    revised_survey: Survey
+
 
 # If you want to run a snippet of code before or after the crew starts,
 # you can use the @before_kickoff and @after_kickoff decorators
@@ -78,11 +94,12 @@ class FieldExperimentAiAgent():
             config=self.tasks_config['research_task'],
         )
 
+    
     @task
-    def reporting_task(self) -> Task:
+    def improve_survey_task(self) -> Task:
         return Task(
-            config=self.tasks_config['reporting_task'],
-            output_file='report.md'
+            config=self.tasks_config['improve_survey'],
+            output_pydantic=SurveyImprovementResult
         )
 
     @crew
