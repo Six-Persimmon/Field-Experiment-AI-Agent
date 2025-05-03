@@ -1,5 +1,43 @@
 from crewai import Agent, Crew, Process, Task
 from crewai.project import CrewBase, agent, crew, task
+from typing import List, Union, Literal, Optional
+from pydantic import BaseModel, Field
+
+#####记得后面call task的时候specify哪个output需要=Survey
+
+# For multiple or single choice questions
+class ChoiceOption(BaseModel):
+    text: str
+    value: str
+
+class ChoiceConfig(BaseModel):
+    options: List[ChoiceOption]
+
+# For slider input
+class SliderConfig(BaseModel):
+    min: float
+    max: float
+    step: float
+
+# For free text input
+class TextInputConfig(BaseModel):
+    placeholder: Optional[str] = None
+    multiline: bool = False
+
+# Question model
+class Question(BaseModel):
+    question_id: str
+    question_text: str
+    input_type: Literal["multiple_choice", "single_choice", "slider", "text_input"]
+    input_config: Union[ChoiceConfig, SliderConfig, TextInputConfig]
+
+
+# Survey model
+class Survey(BaseModel):
+    theme: str
+    purpose: str
+    questions: List[Question]
+
 
 # If you want to run a snippet of code before or after the crew starts,
 # you can use the @before_kickoff and @after_kickoff decorators
