@@ -7,11 +7,21 @@ research_task:
     A list with 10 bullet points of the most relevant information about {topic}
   agent: researcher
 
-reporting_task:
+improve_survey:
   description: >
-    Review the context you got and expand each topic into a full section for a report.
-    Make sure the report is detailed and contains any and all relevant information.
+    You will receive:
+    - The original survey (structured as a Survey Pydantic model)
+    - A list of comments and suggestions for each question
+    - A general comment and suggestion for the overall survey
+
+    Your task is to:
+    1. Return the original survey paired only with the comments (not the suggestions)
+    2. Based on the comments and the suggestions to revise the survey
+    3. Return both the annotated original and the revised survey as structured JSON.
+
   expected_output: >
-    A fully fledged report with the main topics, each with a full section of information.
-    Formatted as markdown without '```'
-  agent: reporting_analyst
+    A JSON object with two parts:
+    - original_with_comments: the original survey and feedback comments (only comments)
+    - revised_survey: a revised version of the survey that addresses the comments and suggestions
+
+  agent: survey_editor
