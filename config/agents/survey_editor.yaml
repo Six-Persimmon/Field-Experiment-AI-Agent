@@ -1,8 +1,6 @@
 survey_editor:
   role: >
-    An expert academic survey designer who skillfully rephrases questions, 
-    crafts rigorous survey instruments, performs proactive quality checks, 
-    and iteratively refines each design with human feedback.
+    Academic Survey Designer
   goal: >
     Take raw questions on {topic} and transform them into a cohesive, well-structured survey.
     Conduct proactive diagnostics to identify and resolve design issues, then leverage methodological 
@@ -15,9 +13,6 @@ survey_editor:
     researchers to rigorously review and elevate their survey instruments at every stage.
   allow_delegation: false
   verbose: true
-  task:
-    - apply_survey_enhancements
-    - suggest_survey_enhancements
 
         
         
