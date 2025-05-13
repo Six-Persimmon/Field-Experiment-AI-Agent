@@ -1,0 +1,36 @@
+comment_survey: # 1. read google doc for more details (Todo 周三之前) 2. find a good knowledge and add to project. 3. comments is on questions for humans to read; suggestions is for AI to read to improve the survey. 5. 4. run in the main loop to see if works.
+  description: >
+    You will receive:
+      - original_survey: the survey as a JSON object conforming to the Survey model  
+
+    Your tasks:
+      1. Produce comments: Provide a list of comment objects for each question as JSON format. These comments should focus on the validity, clarity, and relevance of the questions. The comments should be constructive and aimed at improving the survey design. Each comment should be associated with a SPECIFIC question ID.
+      2. Produce suggestions: Provide a list of suggestion objects for improving the survey. These suggestions should be general, focusing on enhancing the clarity, relevance, and engagement of the questions. The suggestions should mention whether overall the question designs can serve to achieve the survey goals and the research questions that the survey aims to answer. The suggestions should mention what additional questions can be added to the survey to supplement the current questions.
+      3. Respond with exactly this JSON schema (no extra keys, no markdown fences):
+      {
+        "comments": [
+          { "question_id": "<question_id>", "comment": "<comment>" }
+        ],
+        "suggestions": [
+          { "suggestion_id": "<suggestion_id>", "suggestion_text": "<suggestion>" }
+        ]
+      }
+
+  inputs:
+    original_survey:
+      description: "The initial survey JSON object."
+  outputs:
+    comments:
+      description: "List of comment objects for each question as JSON format."
+    suggestions:
+      description: "List of suggestion objects for improving the survey."
+  expected_output: >
+    A JSON object matching the schema shown above, with no additional keys.
+  agent: survey_editor
+
+
+
+
+
+
+
