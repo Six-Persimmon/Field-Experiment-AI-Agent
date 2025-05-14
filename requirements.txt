@@ -1,0 +1,13 @@
+crewai
+docling
+openai
+pandas
+numpy
+boto3
+selenium
+qualtricsapi
+requests
+pydantic
+python-dotenv
+tqdm
+aiohttp
