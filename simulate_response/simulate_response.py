@@ -21,10 +21,6 @@ import copy
 import logging
 from datetime import datetime
 from typing import Literal, Dict, List, Any, Union, Optional
-from pydantic import BaseModel, ValidationError, Field, field_validator
-import openai
-import requests
-import zipfile
 import io
 import time
 import pandas as pd
@@ -36,23 +32,33 @@ from tqdm import tqdm
 
 
 
-def run_single_survey_response(llm, survey_prompt_template, participant_info):
+def run_single_survey_response(llm, survey_prompt_template, survey_context, participant_info):
     """
     Generate a single survey response using LLM.
 
     Args:
         llm: callable that takes in a prompt and returns a response.
         survey_prompt_template: str with placeholders like $age, $gender, $race.
+        survey_context: json string with survey context. Contains questions and instructions.
         participant_info: dict with keys "name", "age", "gender", "race".
 
     Returns:
         dict with participant info and response text.
     """
-    filled_prompt = survey_prompt_template.replace("$age", str(participant_info["age"])) \
+    background_prompt = survey_prompt_template.replace("$age", str(participant_info["age"])) \
                                           .replace("$gender", participant_info["gender"]) \
                                           .replace("$race", participant_info["race"])
+    survey_context = json.loads(survey_context)
+    # combine the background prompt with the survey context to let the LLM response
+    questions = survey_context["questions"]
+    prompt_body = "\n".join([
+        f"Q{i+1}: {q['question_text']}\nOptions: {', '.join(q['input_config']['options'])}"
+        for i, q in enumerate(questions)
+    ])
+    full_prompt = f"{background_prompt}\n\nSurvey Theme: {survey_context['theme']}\nPurpose: {survey_context['purpose']}\n\nPlease answer the following questions in JSON format:\n\n{prompt_body}"
 
-    response = llm(filled_prompt)
+
+    response = llm(full_prompt)
     return {
         "name": participant_info["name"],
         "age": participant_info["age"],
@@ -61,7 +67,8 @@ def run_single_survey_response(llm, survey_prompt_template, participant_info):
         "response": response
     }
 
-def run_all_survey_responses(llm, participant_csv_path, survey_prompt_template):
+
+def run_all_survey_responses(llm, participant_csv_path, survey_prompt_template, survey_context):
     """
     Run the survey across all participants listed in the CSV.
 
@@ -84,7 +91,7 @@ def run_all_survey_responses(llm, participant_csv_path, survey_prompt_template):
             "race": row["Race"]
         }
         response_record = run_single_survey_response(
-            llm, survey_prompt_template, participant_info
+            llm, survey_prompt_template, survey_context, participant_info
         )
         responses.append(response_record)
 
