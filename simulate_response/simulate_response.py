@@ -45,9 +45,9 @@ def run_single_survey_response(llm, survey_prompt_template, survey_context, part
     Returns:
         dict with participant info and response text.
     """
-    background_prompt = survey_prompt_template.replace("$age", str(participant_info["age"])) \
-                                          .replace("$gender", participant_info["gender"]) \
-                                          .replace("$race", participant_info["race"])
+    background_prompt = survey_prompt_template.replace("$age", str(participant_info["Age"])) \
+                                          .replace("$gender", participant_info["Gender"]) \
+                                          .replace("$race", participant_info["Race"])
     survey_context = json.loads(survey_context)
     # combine the background prompt with the survey context to let the LLM response
     questions = survey_context["questions"]
@@ -57,14 +57,13 @@ def run_single_survey_response(llm, survey_prompt_template, survey_context, part
     ])
     full_prompt = f"{background_prompt}\n\nSurvey Theme: {survey_context['theme']}\nPurpose: {survey_context['purpose']}\n\nPlease answer the following questions in JSON format:\n\n{prompt_body}"
 
-
     response = llm(full_prompt)
     return {
-        "name": participant_info["name"],
-        "age": participant_info["age"],
-        "gender": participant_info["gender"],
-        "race": participant_info["race"],
-        "response": response
+        "ParticipantID": participant_info["ParticipantID"],
+        "Age": participant_info["Age"],
+        "Gender": participant_info["Gender"],
+        "Race": participant_info["Race"],
+        "Response": response
     }
 
 
@@ -85,10 +84,10 @@ def run_all_survey_responses(llm, participant_csv_path, survey_prompt_template, 
 
     for _, row in tqdm(df_participants.iterrows(), total=len(df_participants)):
         participant_info = {
-            "name": row["Name"],
-            "age": row["Age"],
-            "gender": row["Gender"],
-            "race": row["Race"]
+            "ParticipantID": row["ParticipantID"],
+            "Age": row["Age"],
+            "Gender": row["Gender"],
+            "Race": row["Race"]
         }
         response_record = run_single_survey_response(
             llm, survey_prompt_template, survey_context, participant_info

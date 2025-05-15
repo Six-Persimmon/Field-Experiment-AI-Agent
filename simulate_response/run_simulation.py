@@ -11,13 +11,19 @@
 from simulate_response import run_all_survey_responses
 from llm_openai import openai_llm
 
-with open("survey_prompt_template.txt", "r") as f:
+# response template
+with open("survey_response_template.txt", "r") as f:
     survey_template = f.read()
+
+# test survey
+with open("test_survey.json", "r") as f:
+    survey_context = f.read()
 
 responses_df = run_all_survey_responses(
     llm=openai_llm,
-    participant_csv_path="participants.csv",
-    survey_prompt_template=survey_template
+    participant_csv_path="participant_pool.csv",
+    survey_prompt_template=survey_template,
+    survey_context=survey_context
 )
 
 responses_df.to_csv("simulated_survey_responses.csv", index=False)
