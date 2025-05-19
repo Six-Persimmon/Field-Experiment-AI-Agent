@@ -1,0 +1,1 @@
+This is a sample stimulus file that would be shown to participants.

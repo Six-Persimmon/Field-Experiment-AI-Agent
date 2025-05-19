@@ -1,0 +1,8 @@
+OSF Journal Survey Design
+
+Purpose: To understand researcher attitudes toward open science practices
+
+Questions:
+1. How important is data sharing in your field? (1-5 scale)
+2. How often do you pre-register your studies? (1-5 scale)
+3. How familiar are you with reproducibility practices? (1-5 scale)

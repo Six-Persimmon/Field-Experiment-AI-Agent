@@ -11,3 +11,9 @@ pydantic
 python-dotenv
 tqdm
 aiohttp
+matplotlib
+seaborn
+PyPDF2
+scipy
+pyyaml
+openpyxl
