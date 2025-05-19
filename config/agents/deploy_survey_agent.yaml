@@ -1,5 +1,3 @@
-
-
         deploy_survey_agent:
           role: >
             Survey Deployment Agent
