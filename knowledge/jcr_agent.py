@@ -10,11 +10,13 @@ Usage:
 import os
 import argparse
 import time
+import glob
 from pathlib import Path
 from dotenv import load_dotenv
 import openai
 from openai import OpenAI
 import json
+import pandas as pd
 
 # Load environment variables
 load_dotenv("/Users/princess/Documents/RA/Field-Experiment-AI-Agent/.env")
@@ -25,115 +27,119 @@ client = OpenAI()
 # Paths
 BASE_DIR = Path("JCR Papers")
 
+def find_data_files(directory):
+    """Find all CSV and Excel files in a directory and its subdirectories."""
+    csv_files = list(directory.glob("**/*.csv"))
+    excel_files = list(directory.glob("**/*.xlsx")) + list(directory.glob("**/*.xls"))
+    return csv_files, excel_files
+
+def read_text_files(directory):
+    """Find and read all text files in a directory and its subdirectories."""
+    text_files = list(directory.glob("**/*.txt")) + list(directory.glob("**/*.md"))
+    survey_design = ""
+    
+    for file_path in text_files:
+        try:
+            with open(file_path, "r") as f:
+                content = f.read()
+                # If it seems to be a survey design document, use it
+                if "survey" in file_path.name.lower() or "design" in file_path.name.lower():
+                    survey_design += f"\n\n## Content from {file_path.name}:\n{content}"
+                # Otherwise, just note that we found it
+                else:
+                    survey_design += f"\n\n## Found text file: {file_path.name}"
+        except Exception as e:
+            print(f"Error reading {file_path}: {e}")
+    
+    return survey_design
+
 def analyze_data(paper_number):
     """Analyze survey data."""
     paper_dir = BASE_DIR / f"Paper #{paper_number}"
     data_dir = paper_dir / "Data and Code"
+    output_dir = paper_dir / "Output"
     
-    # Create sample data if it doesn't exist
+    # Create Output directory if it doesn't exist
+    output_dir.mkdir(parents=True, exist_ok=True)
+    
     if not data_dir.exists():
-        print(f"Creating sample data directory: {data_dir}")
-        data_dir.mkdir(parents=True, exist_ok=True)
-        
-        # Create more comprehensive sample data for better analysis
-        with open(data_dir / "survey_data.csv", "w") as f:
-            f.write("participant_id,age,gender,career_stage,discipline,impact_factor_importance,open_access_importance,editorial_reputation,peer_review_time,publishing_frequency\n")
-            f.write("1,29,Female,Early-career,Biological Sciences,5,4,3,4,2\n")
-            f.write("2,35,Male,Mid-career,Biological Sciences,4,3,5,3,3\n")
-            f.write("3,42,Female,Senior,Social Sciences,5,2,4,2,4\n")
-            f.write("4,31,Male,Early-career,Social Sciences,3,5,3,4,2\n")
-            f.write("5,38,Non-binary,Mid-career,Humanities,2,5,4,3,1\n")
-            f.write("6,45,Female,Senior,Biological Sciences,5,1,5,2,5\n")
-            f.write("7,27,Male,Early-career,Physical Sciences,3,4,3,5,2\n")
-            f.write("8,39,Female,Mid-career,Social Sciences,4,3,4,3,3\n")
-            f.write("9,50,Male,Senior,Physical Sciences,5,2,5,1,4\n")
-            f.write("10,33,Non-binary,Early-career,Humanities,2,5,3,4,1\n")
-            f.write("11,37,Female,Mid-career,Biological Sciences,4,3,4,3,3\n")
-            f.write("12,48,Male,Senior,Humanities,4,3,5,2,2\n")
-            f.write("13,30,Female,Early-career,Physical Sciences,3,5,2,5,2\n")
-            f.write("14,41,Male,Mid-career,Social Sciences,4,3,4,3,3\n")
-            f.write("15,52,Female,Senior,Biological Sciences,5,1,5,1,5\n")
+        raise FileNotFoundError(f"Data directory not found: {data_dir}")
+    
+    # Find all CSV and Excel files in the data directory and its subdirectories
+    csv_files, excel_files = find_data_files(data_dir)
+    
+    # Read text files that might contain survey design information
+    survey_design = read_text_files(data_dir)
+    
+    print(f"Found {len(csv_files)} CSV files and {len(excel_files)} Excel files")
+    
+    # Prepare data information for analysis
+    data_info = []
+    
+    # Process CSV files
+    for file_path in csv_files:
+        try:
+            df = pd.read_csv(file_path)
+            data_info.append({
+                "file_name": file_path.name,
+                "file_path": str(file_path.relative_to(paper_dir)),
+                "columns": list(df.columns),
+                "row_count": len(df),
+                "preview": df.head(10).to_csv(index=False)
+            })
+        except Exception as e:
+            print(f"Error reading CSV file {file_path}: {e}")
+    
+    # Process Excel files
+    for file_path in excel_files:
+        try:
+            xl = pd.ExcelFile(file_path)
+            sheets_info = []
             
-        # Create a more detailed survey design document
-        with open(data_dir / "survey_design.txt", "w") as f:
-            f.write("# OSF Journal Survey Design\n\n")
-            f.write("## Purpose\n")
-            f.write("To understand factors influencing journal selection among researchers across different career stages and disciplines.\n\n")
-            f.write("## Survey Structure\n")
-            f.write("Demographic Information:\n")
-            f.write("- Age (numeric)\n")
-            f.write("- Gender (categorical: Male, Female, Non-binary)\n")
-            f.write("- Career Stage (categorical: Early-career, Mid-career, Senior)\n")
-            f.write("- Discipline (categorical: Biological Sciences, Social Sciences, Physical Sciences, Humanities)\n\n")
-            f.write("Journal Selection Factors (Likert scale 1-5, where 1=Not Important, 5=Very Important):\n")
-            f.write("- Impact Factor Importance\n")
-            f.write("- Open Access Importance\n")
-            f.write("- Editorial Reputation\n")
-            f.write("- Peer Review Time\n")
-            f.write("- Publishing Frequency\n\n")
-            f.write("## Methodology\n")
-            f.write("The survey was distributed electronically to researchers at 15 universities across North America and Europe. Participation was voluntary and anonymous. Data was collected over a 6-week period.\n\n")
-            f.write("## Data Analysis Plan\n")
-            f.write("1. Descriptive statistics for all variables\n")
-            f.write("2. Comparative analysis across demographic groups\n")
-            f.write("3. Correlation analysis between journal selection factors\n")
-            f.write("4. Regression analysis to identify predictors of journal selection preferences\n")
-        
-        # Create sample experiment data
-        with open(data_dir / "experiment_results.csv", "w") as f:
-            f.write("experiment_id,participant_id,condition,task_completion_time,satisfaction_score,accuracy_rate\n")
-            f.write("1,1,Control,45,3,0.75\n")
-            f.write("1,2,Control,52,4,0.82\n")
-            f.write("1,3,Treatment,38,5,0.90\n")
-            f.write("1,4,Treatment,42,4,0.88\n")
-            f.write("1,5,Control,57,3,0.71\n")
-            f.write("2,6,High_Prestige,31,5,0.92\n")
-            f.write("2,7,Low_Prestige,48,2,0.63\n")
-            f.write("2,8,High_Prestige,35,4,0.85\n")
-            f.write("2,9,Low_Prestige,41,3,0.70\n")
-            f.write("2,10,High_Prestige,33,5,0.89\n")
+            for sheet_name in xl.sheet_names:
+                df = pd.read_excel(file_path, sheet_name=sheet_name)
+                sheets_info.append({
+                    "sheet_name": sheet_name,
+                    "columns": list(df.columns),
+                    "row_count": len(df),
+                    "preview": df.head(10).to_csv(index=False)
+                })
+            
+            data_info.append({
+                "file_name": file_path.name,
+                "file_path": str(file_path.relative_to(paper_dir)),
+                "sheets": sheets_info
+            })
+        except Exception as e:
+            print(f"Error reading Excel file {file_path}: {e}")
     
     # Create the prompt for data analysis
+    data_description = ""
+    for item in data_info:
+        data_description += f"\n\n### File: {item['file_name']} ({item['file_path']})\n"
+        if "sheets" in item:  # Excel file
+            for sheet in item["sheets"]:
+                data_description += f"\n#### Sheet: {sheet['sheet_name']}\n"
+                data_description += f"Columns: {', '.join(sheet['columns'])}\n"
+                data_description += f"Row count: {sheet['row_count']}\n"
+                data_description += f"Preview (first 10 rows):\n```\n{sheet['preview']}\n```\n"
+        else:  # CSV file
+            data_description += f"Columns: {', '.join(item['columns'])}\n"
+            data_description += f"Row count: {item['row_count']}\n"
+            data_description += f"Preview (first 10 rows):\n```\n{item['preview']}\n```\n"
+    
     prompt = f"""
     You are a Data Analyst examining OSF journal survey data for Paper #{paper_number}.
     
     Your task is to conduct a comprehensive analysis of the data files in the Paper #{paper_number} directory.
     
-    IMPORTANT: DO NOT merely describe how to analyze the data. Actually perform the analysis on the following data:
+    IMPORTANT: DO NOT merely describe how to analyze the data. Actually perform the analysis on the following data files:
     
-    1. Survey Data (simplified for illustration):
-    ```
-    participant_id,age,gender,career_stage,discipline,impact_factor_importance,open_access_importance,editorial_reputation,peer_review_time,publishing_frequency
-    1,29,Female,Early-career,Biological Sciences,5,4,3,4,2
-    2,35,Male,Mid-career,Biological Sciences,4,3,5,3,3
-    3,42,Female,Senior,Social Sciences,5,2,4,2,4
-    4,31,Male,Early-career,Social Sciences,3,5,3,4,2
-    5,38,Non-binary,Mid-career,Humanities,2,5,4,3,1
-    6,45,Female,Senior,Biological Sciences,5,1,5,2,5
-    7,27,Male,Early-career,Physical Sciences,3,4,3,5,2
-    8,39,Female,Mid-career,Social Sciences,4,3,4,3,3
-    9,50,Male,Senior,Physical Sciences,5,2,5,1,4
-    10,33,Non-binary,Early-career,Humanities,2,5,3,4,1
-    11,37,Female,Mid-career,Biological Sciences,4,3,4,3,3
-    12,48,Male,Senior,Humanities,4,3,5,2,2
-    13,30,Female,Early-career,Physical Sciences,3,5,2,5,2
-    14,41,Male,Mid-career,Social Sciences,4,3,4,3,3
-    15,52,Female,Senior,Biological Sciences,5,1,5,1,5
-    ```
+    {data_description}
     
-    2. Experiment Results:
+    Survey design information:
     ```
-    experiment_id,participant_id,condition,task_completion_time,satisfaction_score,accuracy_rate
-    1,1,Control,45,3,0.75
-    1,2,Control,52,4,0.82
-    1,3,Treatment,38,5,0.90
-    1,4,Treatment,42,4,0.88
-    1,5,Control,57,3,0.71
-    2,6,High_Prestige,31,5,0.92
-    2,7,Low_Prestige,48,2,0.63
-    2,8,High_Prestige,35,4,0.85
-    2,9,Low_Prestige,41,3,0.70
-    2,10,High_Prestige,33,5,0.89
+    {survey_design}
     ```
     
     Provide a complete and comprehensive data analysis including:
@@ -144,17 +150,15 @@ def analyze_data(paper_number):
        - Create tables showing these statistics
     
     2. Correlation Analysis:
-       - Calculate correlations between impact factor, open access, editorial reputation, etc.
+       - Calculate correlations between appropriate variables (e.g., impact factor, open access, editorial reputation)
        - Identify significant relationships with correlation coefficients
     
     3. Group Comparisons:
-       - Compare preferences across career stages (use specific statistics)
-       - Compare preferences across disciplines (use specific statistics)
-       - Compare preferences across gender groups (use specific statistics)
+       - Compare preferences across different groups if applicable (e.g., career stages, disciplines, gender groups)
+       - Use specific statistics for these comparisons
     
     4. Experiment Analysis:
-       - Compare outcomes between control and treatment groups in Experiment 1
-       - Compare outcomes between high and low prestige conditions in Experiment 2
+       - If experiment data is available, compare outcomes between control and treatment groups
        - Calculate effect sizes, if applicable
     
     5. Key Findings and Patterns:
@@ -178,8 +182,8 @@ def analyze_data(paper_number):
     
     analysis = response.choices[0].message.content
     
-    # Save the analysis
-    output_path = paper_dir / "data_analysis.md"
+    # Save the analysis in the Output directory
+    output_path = output_dir / "data_analysis.md"
     with open(output_path, "w") as f:
         f.write(analysis)
     
@@ -190,13 +194,10 @@ def review_methodology(paper_number, analysis):
     """Review research methodology."""
     paper_dir = BASE_DIR / f"Paper #{paper_number}"
     data_dir = paper_dir / "Data and Code"
+    output_dir = paper_dir / "Output"
     
-    # Read the survey design document if it exists
-    survey_design = ""
-    survey_design_path = data_dir / "survey_design.txt"
-    if survey_design_path.exists():
-        with open(survey_design_path, "r") as f:
-            survey_design = f.read()
+    # Read text files to find survey design information
+    survey_design = read_text_files(data_dir)
     
     # Create the prompt for methodology review
     prompt = f"""
@@ -270,8 +271,8 @@ def review_methodology(paper_number, analysis):
     
     review = response.choices[0].message.content
     
-    # Save the review
-    output_path = paper_dir / "methodology_review.md"
+    # Save the review in the Output directory
+    output_path = output_dir / "methodology_review.md"
     with open(output_path, "w") as f:
         f.write(review)
     
@@ -281,6 +282,7 @@ def review_methodology(paper_number, analysis):
 def create_report_outline(paper_number, analysis, review):
     """Create an outline for the research report."""
     paper_dir = BASE_DIR / f"Paper #{paper_number}"
+    output_dir = paper_dir / "Output"
     
     # Create the prompt for report outline
     prompt = f"""
@@ -368,8 +370,8 @@ def create_report_outline(paper_number, analysis, review):
     
     outline = response.choices[0].message.content
     
-    # Save the outline
-    output_path = paper_dir / "report_outline.md"
+    # Save the outline in the Output directory
+    output_path = output_dir / "report_outline.md"
     with open(output_path, "w") as f:
         f.write(outline)
     
@@ -379,6 +381,7 @@ def create_report_outline(paper_number, analysis, review):
 def write_report_draft(paper_number, outline, analysis, review):
     """Write a draft of the research report."""
     paper_dir = BASE_DIR / f"Paper #{paper_number}"
+    output_dir = paper_dir / "Output"
     
     # Create the prompt for report draft
     prompt = f"""
@@ -436,8 +439,8 @@ def write_report_draft(paper_number, outline, analysis, review):
     
     draft = response.choices[0].message.content
     
-    # Save the draft
-    output_path = paper_dir / "report_draft.md"
+    # Save the draft in the Output directory
+    output_path = output_dir / "report_draft.md"
     with open(output_path, "w") as f:
         f.write(draft)
     
@@ -447,10 +450,11 @@ def write_report_draft(paper_number, outline, analysis, review):
 def review_report(paper_number, draft):
     """Review the report draft."""
     paper_dir = BASE_DIR / f"Paper #{paper_number}"
+    output_dir = paper_dir / "Output"
     
     # Load the original data analysis and methodology review for context
-    analysis_path = paper_dir / "data_analysis.md"
-    review_path = paper_dir / "methodology_review.md"
+    analysis_path = output_dir / "data_analysis.md"
+    review_path = output_dir / "methodology_review.md"
     
     with open(analysis_path, "r") as f:
         analysis = f.read()
@@ -532,8 +536,8 @@ def review_report(paper_number, draft):
     
     feedback = response.choices[0].message.content
     
-    # Save the feedback
-    output_path = paper_dir / "report_feedback.md"
+    # Save the feedback in the Output directory
+    output_path = output_dir / "report_feedback.md"
     with open(output_path, "w") as f:
         f.write(feedback)
     
@@ -543,10 +547,11 @@ def review_report(paper_number, draft):
 def finalize_report(paper_number, draft, feedback):
     """Finalize the research report."""
     paper_dir = BASE_DIR / f"Paper #{paper_number}"
+    output_dir = paper_dir / "Output"
     
     # Get the data analysis and methodology review for additional context
-    analysis_path = paper_dir / "data_analysis.md"
-    review_path = paper_dir / "methodology_review.md"
+    analysis_path = output_dir / "data_analysis.md"
+    review_path = output_dir / "methodology_review.md"
     
     with open(analysis_path, "r") as f:
         analysis = f.read()
@@ -620,8 +625,8 @@ def finalize_report(paper_number, draft, feedback):
     
     final_report = response.choices[0].message.content
     
-    # Save the final report
-    output_path = paper_dir / "final_report.md"
+    # Save the final report in the Output directory
+    output_path = output_dir / "final_report.md"
     with open(output_path, "w") as f:
         f.write(final_report)
     
@@ -631,7 +636,12 @@ def finalize_report(paper_number, draft, feedback):
 def main(paper_number: int):
     """Main function to run the journal report generation process."""
     paper_dir = BASE_DIR / f"Paper #{paper_number}"
+    output_dir = paper_dir / "Output"
+    
+    # Create Paper directory if it doesn't exist
     paper_dir.mkdir(parents=True, exist_ok=True)
+    # Create Output directory if it doesn't exist
+    output_dir.mkdir(parents=True, exist_ok=True)
     
     print(f"\n=== Starting report generation process for Paper #{paper_number} ===\n")
     
@@ -667,14 +677,14 @@ def main(paper_number: int):
         final_report = finalize_report(paper_number, draft, feedback)
         
         print(f"\n=== Report generation complete for Paper #{paper_number}! ===")
-        print(f"All outputs saved in: {paper_dir}\n")
+        print(f"All outputs saved in: {output_dir}\n")
         print(f"Files generated:")
-        print(f"- {paper_dir}/data_analysis.md (Step 1)")
-        print(f"- {paper_dir}/methodology_review.md (Step 2)")
-        print(f"- {paper_dir}/report_outline.md (Step 3)")
-        print(f"- {paper_dir}/report_draft.md (Step 4)")
-        print(f"- {paper_dir}/report_feedback.md (Step 5)")
-        print(f"- {paper_dir}/final_report.md (Final Output)")
+        print(f"- {output_dir}/data_analysis.md (Step 1)")
+        print(f"- {output_dir}/methodology_review.md (Step 2)")
+        print(f"- {output_dir}/report_outline.md (Step 3)")
+        print(f"- {output_dir}/report_draft.md (Step 4)")
+        print(f"- {output_dir}/report_feedback.md (Step 5)")
+        print(f"- {output_dir}/final_report.md (Final Output)")
         
     except Exception as e:
         print(f"Error in report generation process: {str(e)}")
