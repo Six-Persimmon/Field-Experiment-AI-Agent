@@ -1,7 +1,7 @@
 """
 JCR Journal Report Generation Agent
 
-This script generates a research report based on OSF journal survey design and data.
+This script generates a research report based on OSF journal survey design and data using Claude.
 
 Usage:
     python jcr_agent.py --paper_number 1
@@ -13,19 +13,20 @@ import time
 import glob
 from pathlib import Path
 from dotenv import load_dotenv
-import openai
-from openai import OpenAI
+import anthropic
 import json
 import pandas as pd
 
 # Load environment variables
 load_dotenv("/Users/princess/Documents/RA/Field-Experiment-AI-Agent/.env")
 
-# Configure OpenAI
-client = OpenAI()
+# Configure Claude
+client = anthropic.Anthropic(
+    api_key=os.environ.get("ANTHROPIC_API_KEY")
+)
 
 # Paths
-BASE_DIR = Path("JCR Papers")
+BASE_DIR = Path("New Papers")
 
 def find_data_files(directory):
     """Find all CSV and Excel files in a directory and its subdirectories."""
@@ -53,7 +54,46 @@ def read_text_files(directory):
     
     return survey_design
 
-def analyze_data(paper_number):
+def get_hypothesis():
+    """Prompt user to input the research hypothesis."""
+    print("\n=== Research Hypothesis Input ===")
+    print("Please enter the research hypothesis for this paper.")
+    print("This will help guide the analysis and report generation.")
+    print("Enter your hypothesis below (type 'END' on a new line when finished):\n")
+    
+    lines = []
+    while True:
+        line = input()
+        if line.strip().upper() == "END":
+            break
+        lines.append(line)
+    
+    hypothesis = "\n".join(lines)
+    
+    print("\nHypothesis received. This will be used to guide the report generation.")
+    return hypothesis
+
+def call_claude(system_prompt, user_prompt, max_tokens=4000):
+    """Helper function to call Claude with consistent parameters."""
+    try:
+        message = client.messages.create(
+            model="claude-3-5-sonnet-20241022",
+            max_tokens=max_tokens,
+            system=system_prompt,
+            messages=[
+                {
+                    "role": "user",
+                    "content": user_prompt
+                }
+            ],
+            temperature=0.3
+        )
+        return message.content[0].text
+    except Exception as e:
+        print(f"Error calling Claude: {e}")
+        raise
+
+def analyze_data(paper_number, hypothesis):
     """Analyze survey data."""
     paper_dir = BASE_DIR / f"Paper #{paper_number}"
     data_dir = paper_dir / "Data and Code"
@@ -128,12 +168,17 @@ def analyze_data(paper_number):
             data_description += f"Row count: {item['row_count']}\n"
             data_description += f"Preview (first 10 rows):\n```\n{item['preview']}\n```\n"
     
-    prompt = f"""
-    You are a Data Analyst examining OSF journal survey data for Paper #{paper_number}.
+    user_prompt = f"""
+    I need you to conduct a comprehensive analysis of the data files for Paper #{paper_number}.
     
-    Your task is to conduct a comprehensive analysis of the data files in the Paper #{paper_number} directory.
+    IMPORTANT RESEARCH HYPOTHESIS:
+    ```
+    {hypothesis}
+    ```
     
-    IMPORTANT: DO NOT merely describe how to analyze the data. Actually perform the analysis on the following data files:
+    IMPORTANT: Your analysis should focus on testing and exploring this hypothesis using the available data.
+    
+    Data files available for analysis:
     
     {data_description}
     
@@ -150,47 +195,48 @@ def analyze_data(paper_number):
        - Create tables showing these statistics
     
     2. Correlation Analysis:
-       - Calculate correlations between appropriate variables (e.g., impact factor, open access, editorial reputation)
+       - Calculate correlations between appropriate variables (e.g., speed perception, abstraction level, decision-making variables)
        - Identify significant relationships with correlation coefficients
     
     3. Group Comparisons:
-       - Compare preferences across different groups if applicable (e.g., career stages, disciplines, gender groups)
-       - Use specific statistics for these comparisons
+       - Compare differences between experimental conditions (e.g., fast vs. slow movement)
+       - Use specific statistics for these comparisons (t-tests, ANOVA, etc.)
     
     4. Experiment Analysis:
-       - If experiment data is available, compare outcomes between control and treatment groups
-       - Calculate effect sizes, if applicable
+       - Compare outcomes between control and treatment groups
+       - Calculate effect sizes for each experiment mentioned in the hypothesis
+       - Test whether the data supports the speed-abstraction effect described in the hypothesis
     
     5. Key Findings and Patterns:
        - Identify the top 3-5 most significant findings with specific numbers
+       - Evaluate whether the findings support the stated hypothesis
        - Note any unexpected or surprising patterns in the data
     
-    Your analysis should include specific numerical results (means, standard deviations, correlation coefficients, p-values where appropriate). Provide tables of results where helpful. This is not a theoretical exercise - actually analyze the data provided.
+    Your analysis should include specific numerical results (means, standard deviations, correlation coefficients, p-values where appropriate). Provide tables of results where helpful. This is not a theoretical exercise - actually analyze the data provided to test the stated hypothesis.
     """
+    
+    system_prompt = "You are a skilled data analyst specializing in research data. Always provide specific numerical results and detailed analysis of actual data, not theoretical instructions."
     
     print(f"Performing data analysis for Paper #{paper_number}...")
     
-    # Call GPT to analyze the data
-    response = client.chat.completions.create(
-        model="gpt-4-turbo",
-        messages=[
-            {"role": "system", "content": "You are a skilled data analyst specializing in research data. Always provide specific numerical results and detailed analysis of actual data, not theoretical instructions."},
-            {"role": "user", "content": prompt}
-        ],
-        temperature=0.2
-    )
-    
-    analysis = response.choices[0].message.content
+    # Call Claude to analyze the data
+    analysis = call_claude(system_prompt, user_prompt, max_tokens=4000)
     
     # Save the analysis in the Output directory
     output_path = output_dir / "data_analysis.md"
     with open(output_path, "w") as f:
         f.write(analysis)
     
+    # Save the hypothesis separately
+    hypothesis_path = output_dir / "research_hypothesis.md"
+    with open(hypothesis_path, "w") as f:
+        f.write(f"# Research Hypothesis for Paper #{paper_number}\n\n{hypothesis}")
+    
     print(f"Data analysis saved to {output_path}")
-    return analysis
+    print(f"Research hypothesis saved to {hypothesis_path}")
+    return analysis, hypothesis
 
-def review_methodology(paper_number, analysis):
+def review_methodology(paper_number, analysis, hypothesis):
     """Review research methodology."""
     paper_dir = BASE_DIR / f"Paper #{paper_number}"
     data_dir = paper_dir / "Data and Code"
@@ -200,8 +246,13 @@ def review_methodology(paper_number, analysis):
     survey_design = read_text_files(data_dir)
     
     # Create the prompt for methodology review
-    prompt = f"""
-    You are a Methodology Expert reviewing the research design for Paper #{paper_number}.
+    user_prompt = f"""
+    I need you to conduct a comprehensive review of the research design for Paper #{paper_number}.
+    
+    RESEARCH HYPOTHESIS:
+    ```
+    {hypothesis}
+    ```
     
     Review the following survey design:
     ```
@@ -216,9 +267,10 @@ def review_methodology(paper_number, analysis):
     Your task is to conduct a comprehensive review of the methodology, focusing on concrete, specific aspects:
     
     1. Research Questions and Hypotheses:
-       - Evaluate if the research questions are clearly articulated and appropriately focused 
-       - Assess if the research questions are answerable with the collected data
-       - Recommend specific improvements to research questions
+       - Evaluate if the research hypothesis is clearly articulated and appropriately focused 
+       - Assess if the hypothesis is testable with the collected data
+       - Evaluate how well the experiments mentioned in the hypothesis are designed to test the proposed effects
+       - Recommend specific improvements to the research questions
     
     2. Sampling Strategy:
        - Analyze the specific sampling method used (e.g., stratified random, convenience)
@@ -226,24 +278,30 @@ def review_methodology(paper_number, analysis):
        - Evaluate sample size adequacy for the statistical tests conducted
        - Assess potential sampling biases and their impact on validity
     
-    3. Survey Instrument Validity and Reliability:
+    3. Experimental Design:
+       - Evaluate the design of each experiment mentioned in the hypothesis
+       - Assess the experimental manipulations and controls
+       - Evaluate the measurement approaches
+       - Identify potential confounding variables
+    
+    4. Survey Instrument Validity and Reliability:
        - Evaluate construct validity - do the questions measure what they claim to?
        - Assess content validity - do the questions cover all relevant aspects of the topic?
        - Calculate (or estimate) reliability coefficients (e.g., Cronbach's alpha) for scale items
        - Identify specific items that may have validity or reliability issues
     
-    4. Data Collection Procedures:
+    5. Data Collection Procedures:
        - Evaluate the time frame and potential temporal biases
        - Assess the response rate and potential non-response bias
        - Evaluate the data collection method (online, in-person, etc.) and associated biases
     
-    5. Data Analysis Methods:
+    6. Data Analysis Methods:
        - Evaluate the appropriateness of statistical tests used
        - Assess if assumptions for these tests were met
        - Identify any missing or additional analyses that should be conducted
        - Suggest specific alternative analyses if applicable
     
-    6. Ethical Considerations:
+    7. Ethical Considerations:
        - Evaluate informed consent procedures
        - Assess data privacy and confidentiality measures
        - Identify any ethical concerns with the methodology
@@ -257,19 +315,12 @@ def review_methodology(paper_number, analysis):
     Your review should be thorough, specific, and actionable - focusing on the actual methodology used rather than general principles.
     """
     
+    system_prompt = "You are a research methodologist with expertise in survey design and experimental methods. Provide concrete, specific methodological assessments based on actual research designs, not general principles."
+    
     print(f"Reviewing methodology for Paper #{paper_number}...")
     
-    # Call GPT to review the methodology
-    response = client.chat.completions.create(
-        model="gpt-4-turbo",
-        messages=[
-            {"role": "system", "content": "You are a research methodologist with expertise in survey design. Provide concrete, specific methodological assessments based on actual research designs, not general principles."},
-            {"role": "user", "content": prompt}
-        ],
-        temperature=0.3
-    )
-    
-    review = response.choices[0].message.content
+    # Call Claude to review the methodology
+    review = call_claude(system_prompt, user_prompt, max_tokens=4000)
     
     # Save the review in the Output directory
     output_path = output_dir / "methodology_review.md"
@@ -279,14 +330,19 @@ def review_methodology(paper_number, analysis):
     print(f"Methodology review saved to {output_path}")
     return review
 
-def create_report_outline(paper_number, analysis, review):
+def create_report_outline(paper_number, analysis, review, hypothesis):
     """Create an outline for the research report."""
     paper_dir = BASE_DIR / f"Paper #{paper_number}"
     output_dir = paper_dir / "Output"
     
     # Create the prompt for report outline
-    prompt = f"""
-    You are a Research Writer creating a detailed outline for a research report based on OSF journal survey data.
+    user_prompt = f"""
+    I need you to create a detailed outline for a research report based on OSF journal survey data.
+    
+    RESEARCH HYPOTHESIS:
+    ```
+    {hypothesis}
+    ```
     
     You have access to:
     
@@ -300,7 +356,7 @@ def create_report_outline(paper_number, analysis, review):
     {review}
     ```
     
-    Your task is to create a comprehensive, detailed outline for a scholarly research report. The outline should:
+    Your task is to create a comprehensive, detailed outline for a scholarly research report that tests the effects described in the hypothesis. The outline should:
     
     1. Follow standard academic paper structure with all major sections and subsections
     2. Include specific bullet points under each section detailing exactly what content will be covered
@@ -310,41 +366,49 @@ def create_report_outline(paper_number, analysis, review):
     
     The outline must include these sections:
     
-    1. Title (suggest a specific, descriptive title)
+    1. Title (suggest a specific, descriptive title related to the research topic)
     
     2. Abstract (bullet points for what should be included)
     
     3. Introduction
-       - Background literature review (specific topics to cover)
+       - Background literature review (specific topics related to the research area)
        - Problem statement
        - Research questions/hypotheses (be specific about each question)
        - Significance of the study
     
-    4. Methods
+    4. Theoretical Framework
+       - Key theoretical concepts
+       - Relationship between variables
+       - Connection to decision-making processes
+       - Alternative explanations
+    
+    5. Methods
        - Participants (demographics, sampling approach)
        - Materials/Instruments (survey details, scales used)
        - Procedure (data collection, timeline, ethical considerations)
        - Data Analysis Approach (specific statistical tests)
     
-    5. Results
+    6. Results
        - Descriptive Statistics (which specific statistics to report)
        - Inferential Statistics (which analyses and findings to present)
        - Tables and Figures (describe what each table/figure should show)
+       - Separate sections for each experiment mentioned in the hypothesis
     
-    6. Discussion
+    7. Discussion
        - Interpretation of Key Findings (for each major finding)
+       - Evaluation of the main effects
        - Comparison with Existing Literature
        - Limitations (methodological issues identified in the review)
        - Implications (theoretical and practical)
     
-    7. Conclusion
+    8. Conclusion
        - Summary of Findings
        - Recommendations
        - Future Research Directions
     
-    8. References (note types of sources to include)
+    9. References (note types of sources to include)
     
-    9. Appendices (what should be included)
+    10. Appendices (what should be included)
     
     For each section, include:
     - At least 3-5 detailed bullet points specifying content
@@ -355,20 +419,12 @@ def create_report_outline(paper_number, analysis, review):
     This outline will serve as the comprehensive blueprint for writing the actual paper, so be thorough and specific.
     """
     
+    system_prompt = "You are an experienced academic writer who specializes in creating detailed, comprehensive research paper outlines. Your outlines are specific, thorough, and provide clear direction for paper writing."
+    
     print(f"Creating report outline for Paper #{paper_number}...")
     
-    # Call GPT to create the outline
-    response = client.chat.completions.create(
-        model="gpt-4-turbo",
-        messages=[
-            {"role": "system", "content": "You are an experienced academic writer who specializes in creating detailed, comprehensive research paper outlines. Your outlines are specific, thorough, and provide clear direction for paper writing."},
-            {"role": "user", "content": prompt}
-        ],
-        temperature=0.7,
-        max_tokens=3000
-    )
-    
-    outline = response.choices[0].message.content
+    # Call Claude to create the outline
+    outline = call_claude(system_prompt, user_prompt, max_tokens=4000)
     
     # Save the outline in the Output directory
     output_path = output_dir / "report_outline.md"
@@ -378,14 +434,19 @@ def create_report_outline(paper_number, analysis, review):
     print(f"Report outline saved to {output_path}")
     return outline
 
-def write_report_draft(paper_number, outline, analysis, review):
+def write_report_draft(paper_number, outline, analysis, review, hypothesis):
     """Write a draft of the research report."""
     paper_dir = BASE_DIR / f"Paper #{paper_number}"
     output_dir = paper_dir / "Output"
     
     # Create the prompt for report draft
-    prompt = f"""
-    You are a Research Writer drafting a detailed research report based on OSF journal survey data.
+    user_prompt = f"""
+    I need you to write a comprehensive, detailed academic research report based on OSF journal survey data.
+    
+    RESEARCH HYPOTHESIS:
+    ```
+    {hypothesis}
+    ```
     
     You have:
     
@@ -404,19 +465,20 @@ def write_report_draft(paper_number, outline, analysis, review):
     {review}
     ```
     
-    Your task is to write a comprehensive, detailed academic research report that:
+    Your task is to write a comprehensive, detailed academic research report that tests the effects described in the hypothesis. The report should:
     
-    1. Follows the structure in the outline precisely
-    2. Incorporates ALL specific numerical findings from the data analysis
-    3. Addresses ALL methodological considerations from the review
-    4. Cites relevant literature throughout (create appropriate citations where needed)
-    5. Includes detailed tables and describes specific visualizations where relevant
+    1. Follow the structure in the outline precisely
+    2. Incorporate ALL specific numerical findings from the data analysis
+    3. Address ALL methodological considerations from the review
+    4. Cite relevant literature throughout (create appropriate citations where needed)
+    5. Include detailed tables and describe specific visualizations where relevant
     
     Specific requirements:
     
     - Introduction: Include at least 3 paragraphs with relevant background literature and clearly articulated research questions
-    - Methods: Provide detailed subsections on participants, materials, and procedures (at least 500 words total)
-    - Results: Report specific statistical findings with exact numbers, p-values, effect sizes, and confidence intervals where appropriate
+    - Theoretical Framework: Explain the key theoretical concepts in detail
+    - Methods: Provide detailed subsections on participants, materials, and procedures for each experiment mentioned in the hypothesis (at least 500 words total)
+    - Results: Report specific statistical findings with exact numbers, p-values, effect sizes, and confidence intervals where appropriate for each experiment
     - Discussion: Include at least 4 paragraphs interpreting results, discussing limitations, and suggesting implications
     - Conclusion: Summarize key findings and suggest at least 3 specific future research directions
     - Include at least a dozen relevant academic citations throughout
@@ -424,20 +486,12 @@ def write_report_draft(paper_number, outline, analysis, review):
     The report should be thorough, detailed, and meet high standards for academic publication. The final product should be at least 2500 words and suitable for submission to a peer-reviewed journal.
     """
     
+    system_prompt = "You are an academic writer with experience in publishing journal articles. Produce detailed, comprehensive reports with specific statistical findings and thorough academic content."
+    
     print(f"Writing report draft for Paper #{paper_number}...")
     
-    # Call GPT to write the draft
-    response = client.chat.completions.create(
-        model="gpt-4-turbo",
-        messages=[
-            {"role": "system", "content": "You are an academic writer with experience in publishing journal articles. Produce detailed, comprehensive reports with specific statistical findings and thorough academic content."},
-            {"role": "user", "content": prompt}
-        ],
-        temperature=0.7,
-        max_tokens=4000
-    )
-    
-    draft = response.choices[0].message.content
+    # Call Claude to write the draft
+    draft = call_claude(system_prompt, user_prompt, max_tokens=4000)
     
     # Save the draft in the Output directory
     output_path = output_dir / "report_draft.md"
@@ -447,7 +501,7 @@ def write_report_draft(paper_number, outline, analysis, review):
     print(f"Report draft saved to {output_path}")
     return draft
 
-def review_report(paper_number, draft):
+def review_report(paper_number, draft, hypothesis):
     """Review the report draft."""
     paper_dir = BASE_DIR / f"Paper #{paper_number}"
     output_dir = paper_dir / "Output"
@@ -463,8 +517,13 @@ def review_report(paper_number, draft):
         methodology_review = f.read()
     
     # Create the prompt for report review
-    prompt = f"""
-    You are a Methodology Expert reviewing a draft research report based on OSF journal survey data.
+    user_prompt = f"""
+    I need you to conduct a thorough, critical review of this research report draft focusing on methodological rigor, accurate reporting of findings, and scholarly writing.
+    
+    RESEARCH HYPOTHESIS:
+    ```
+    {hypothesis}
+    ```
     
     The draft report:
     ```
@@ -481,26 +540,29 @@ def review_report(paper_number, draft):
     {methodology_review}
     ```
     
-    Your task is to conduct a thorough, critical review of this report draft focusing on methodological rigor, accurate reporting of findings, and scholarly writing. Provide detailed feedback on:
+    Provide detailed feedback on:
     
     1. Overall Quality and Structure (organization, coherence, flow)
        - Evaluate each major section (intro, methods, results, discussion, conclusion)
+       - Assess how well the paper addresses the effects described in the hypothesis
        - Identify specific areas where structure could be improved
     
     2. Methodological Accuracy and Completeness
-       - Verify that all methodological details are correctly reported
+       - Verify that all methodological details for the experiments are correctly reported
        - Identify any missing methodological information
        - Assess if statistical analyses are appropriately described and interpreted
        - Check if appropriate statistical tests were used and reported correctly
     
     3. Results Reporting
        - Verify that all major findings from the data analysis are included
+       - Evaluate if the results properly test the proposed effects
        - Check for accuracy of reported statistics, p-values, effect sizes
        - Evaluate completeness of results reporting
        - Assess if tables/figures are properly described and necessary
     
     4. Discussion Quality
        - Evaluate if interpretations are justified by the actual results
+       - Assess if alternative explanations are adequately addressed
        - Assess if limitations are thoroughly addressed
        - Check if implications are reasonable and not overstated
     
@@ -521,20 +583,12 @@ def review_report(paper_number, draft):
     Focus on substantive issues rather than minor stylistic concerns. Be specific, detailed, and actionable in your feedback.
     """
     
+    system_prompt = "You are a research methodologist and academic editor with expertise in reviewing scholarly papers. Be thorough, specific, and critical in your review, focusing on substantive methodological and reporting issues."
+    
     print(f"Reviewing report for Paper #{paper_number}...")
     
-    # Call GPT to review the report
-    response = client.chat.completions.create(
-        model="gpt-4-turbo",
-        messages=[
-            {"role": "system", "content": "You are a research methodologist and academic editor with expertise in reviewing scholarly papers. Be thorough, specific, and critical in your review, focusing on substantive methodological and reporting issues."},
-            {"role": "user", "content": prompt}
-        ],
-        temperature=0.3,
-        max_tokens=3000
-    )
-    
-    feedback = response.choices[0].message.content
+    # Call Claude to review the report
+    feedback = call_claude(system_prompt, user_prompt, max_tokens=4000)
     
     # Save the feedback in the Output directory
     output_path = output_dir / "report_feedback.md"
@@ -544,7 +598,7 @@ def review_report(paper_number, draft):
     print(f"Report feedback saved to {output_path}")
     return feedback
 
-def finalize_report(paper_number, draft, feedback):
+def finalize_report(paper_number, draft, feedback, hypothesis):
     """Finalize the research report."""
     paper_dir = BASE_DIR / f"Paper #{paper_number}"
     output_dir = paper_dir / "Output"
@@ -560,8 +614,13 @@ def finalize_report(paper_number, draft, feedback):
         review = f.read()
     
     # Create the prompt for finalizing the report
-    prompt = f"""
-    You are a Research Writer finalizing a comprehensive research report based on OSF journal survey data.
+    user_prompt = f"""
+    I need you to produce an exceptional, publication-ready final report that thoroughly tests and explores the effects described in the hypothesis.
+    
+    RESEARCH HYPOTHESIS:
+    ```
+    {hypothesis}
+    ```
     
     You have:
     
@@ -585,23 +644,23 @@ def finalize_report(paper_number, draft, feedback):
     {review}
     ```
     
-    Your task is to produce an exceptional, publication-ready final report that:
+    The report should:
     
-    1. Addresses ALL feedback and suggestions from the review in detail
-    2. Significantly enhances the draft by adding more depth, rigor, and detail
-    3. Incorporates ALL key statistical findings from the data analysis with precise reporting
-    4. Features a comprehensive methods section that addresses methodological concerns
-    5. Includes detailed tables for reporting results 
-    6. Describes visualizations that would enhance understanding (as if they were included)
-    7. Contains a sophisticated discussion that thoroughly examines implications
-    8. Provides a detailed conclusion with specific recommendations
+    1. Address ALL feedback and suggestions from the review in detail
+    2. Significantly enhance the draft by adding more depth, rigor, and detail
+    3. Incorporate ALL key statistical findings from the data analysis with precise reporting
+    4. Feature a comprehensive methods section that addresses methodological concerns for all experiments
+    5. Include detailed tables for reporting results 
+    6. Describe visualizations that would enhance understanding (as if they were included)
+    7. Contain a sophisticated discussion that thoroughly examines implications
+    8. Provide a detailed conclusion with specific recommendations
     
     Specific requirements for the final report:
     
     - Length: At least 3500 words
     - Citations: Include at least 15-20 relevant academic references
     - Results section: Report all statistical findings with precise values, confidence intervals, effect sizes, and p-values
-    - Methods section: Include detailed subsections on participants, materials, procedures, and data analysis approach
+    - Methods section: Include detailed subsections on participants, materials, procedures, and data analysis approach for each experiment
     - Discussion: At least 1000 words with thorough examination of findings, limitations, and implications
     - Use formal academic language and structure throughout
     - Include detailed demographic information about participants
@@ -610,20 +669,12 @@ def finalize_report(paper_number, draft, feedback):
     This should be an exemplary academic paper suitable for submission to a high-quality peer-reviewed journal.
     """
     
+    system_prompt = "You are an academic writer with experience producing thorough, detailed, and rigorous research reports for prestigious journals. Your reports are comprehensive, precise, and meticulously detailed."
+    
     print(f"Finalizing report for Paper #{paper_number}...")
     
-    # Call GPT to finalize the report
-    response = client.chat.completions.create(
-        model="gpt-4-turbo",
-        messages=[
-            {"role": "system", "content": "You are an academic writer with experience producing thorough, detailed, and rigorous research reports for prestigious journals. Your reports are comprehensive, precise, and meticulously detailed."},
-            {"role": "user", "content": prompt}
-        ],
-        temperature=0.7,
-        max_tokens=4000  # Reduced from 4500 to stay within limits
-    )
-    
-    final_report = response.choices[0].message.content
+    # Call Claude to finalize the report
+    final_report = call_claude(system_prompt, user_prompt, max_tokens=4000)
     
     # Save the final report in the Output directory
     output_path = output_dir / "final_report.md"
@@ -645,40 +696,44 @@ def main(paper_number: int):
     
     print(f"\n=== Starting report generation process for Paper #{paper_number} ===\n")
     
+    # Get the research hypothesis from the user
+    hypothesis = get_hypothesis()
+    
     # Run the pipeline
     try:
         # Step 1: Perform data analysis
         print("\n--- Step 1: Data Analysis ---")
-        analysis = analyze_data(paper_number)
+        analysis, hypothesis = analyze_data(paper_number, hypothesis)
         time.sleep(2)  # Pause to avoid rate limiting
         
         # Step 2: Review methodology
         print("\n--- Step 2: Methodology Review ---")
-        review = review_methodology(paper_number, analysis)
+        review = review_methodology(paper_number, analysis, hypothesis)
         time.sleep(2)
         
         # Step 3: Create report outline
         print("\n--- Step 3: Report Outline Creation ---")
-        outline = create_report_outline(paper_number, analysis, review)
+        outline = create_report_outline(paper_number, analysis, review, hypothesis)
         time.sleep(2)
         
         # Step 4: Write report draft
         print("\n--- Step 4: Report Draft Writing ---")
-        draft = write_report_draft(paper_number, outline, analysis, review)
+        draft = write_report_draft(paper_number, outline, analysis, review, hypothesis)
         time.sleep(2)
         
         # Step 5: Review report
         print("\n--- Step 5: Report Review ---")
-        feedback = review_report(paper_number, draft)
+        feedback = review_report(paper_number, draft, hypothesis)
         time.sleep(2)
         
         # Step 6: Finalize report
         print("\n--- Step 6: Report Finalization ---")
-        final_report = finalize_report(paper_number, draft, feedback)
+        final_report = finalize_report(paper_number, draft, feedback, hypothesis)
         
         print(f"\n=== Report generation complete for Paper #{paper_number}! ===")
         print(f"All outputs saved in: {output_dir}\n")
         print(f"Files generated:")
+        print(f"- {output_dir}/research_hypothesis.md (Initial Input)")
         print(f"- {output_dir}/data_analysis.md (Step 1)")
         print(f"- {output_dir}/methodology_review.md (Step 2)")
         print(f"- {output_dir}/report_outline.md (Step 3)")
@@ -692,8 +747,8 @@ def main(paper_number: int):
         traceback.print_exc()
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='JCR Journal Report Agent')
-    parser.add_argument('--paper_number', type=int, required=True, help='Paper number to analyze')
+    parser = argparse.ArgumentParser(description='JCR Journal Report Agent - Claude Version')
+    parser.add_argument('--paper', type=int, required=True, help='Paper number to analyze')
     args = parser.parse_args()
     
-    main(args.paper_number)
+    main(args.paper)
