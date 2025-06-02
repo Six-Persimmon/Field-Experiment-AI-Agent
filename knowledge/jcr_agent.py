@@ -1,7 +1,7 @@
 """
 JCR Journal Report Generation Agent
 
-This script generates a research report based on OSF journal survey design and data using Claude.
+This script generates a research report based on OSF journal survey design and data.
 
 Usage:
     python jcr_agent.py --paper_number 1
@@ -13,17 +13,16 @@ import time
 import glob
 from pathlib import Path
 from dotenv import load_dotenv
-import anthropic
+import openai
+from openai import OpenAI
 import json
 import pandas as pd
 
 # Load environment variables
 load_dotenv("/Users/princess/Documents/RA/Field-Experiment-AI-Agent/.env")
 
-# Configure Claude
-client = anthropic.Anthropic(
-    api_key=os.environ.get("ANTHROPIC_API_KEY")
-)
+# Configure OpenAI
+client = OpenAI()
 
 # Paths
 BASE_DIR = Path("New Papers")
@@ -36,12 +35,16 @@ def find_data_files(directory):
 
 def read_text_files(directory):
     """Find and read all text files in a directory and its subdirectories."""
+    # Find text files (.txt, .md) and PDF files
     text_files = list(directory.glob("**/*.txt")) + list(directory.glob("**/*.md"))
+    pdf_files = list(directory.glob("**/*.pdf"))
+    
     survey_design = ""
     
+    # Process text files (.txt and .md)
     for file_path in text_files:
         try:
-            with open(file_path, "r") as f:
+            with open(file_path, "r", encoding='utf-8') as f:
                 content = f.read()
                 # If it seems to be a survey design document, use it
                 if "survey" in file_path.name.lower() or "design" in file_path.name.lower():
@@ -51,6 +54,38 @@ def read_text_files(directory):
                     survey_design += f"\n\n## Found text file: {file_path.name}"
         except Exception as e:
             print(f"Error reading {file_path}: {e}")
+    
+    # Process PDF files
+    for file_path in pdf_files:
+        try:
+            # Check if this looks like a methodology/survey design PDF
+            if any(keyword in file_path.name.lower() for keyword in ["survey", "design", "method", "protocol", "procedure"]):
+                # Try to extract text from PDF
+                try:
+                    import PyPDF2
+                    with open(file_path, "rb") as f:
+                        pdf_reader = PyPDF2.PdfReader(f)
+                        pdf_text = ""
+                        for page in pdf_reader.pages:
+                            pdf_text += page.extract_text() + "\n"
+                        
+                        if pdf_text.strip():  # Only add if we extracted some text
+                            survey_design += f"\n\n## Content from {file_path.name} (PDF):\n{pdf_text}"
+                        else:
+                            survey_design += f"\n\n## Found PDF file (text extraction failed): {file_path.name}"
+                            
+                except ImportError:
+                    print(f"PyPDF2 not available. Install with: pip install PyPDF2")
+                    survey_design += f"\n\n## Found PDF file (PyPDF2 not installed): {file_path.name}"
+                except Exception as pdf_error:
+                    print(f"Error extracting text from PDF {file_path}: {pdf_error}")
+                    survey_design += f"\n\n## Found PDF file (text extraction failed): {file_path.name}"
+            else:
+                # Just note that we found a PDF file
+                survey_design += f"\n\n## Found PDF file: {file_path.name}"
+                
+        except Exception as e:
+            print(f"Error processing PDF {file_path}: {e}")
     
     return survey_design
 
@@ -72,26 +107,6 @@ def get_hypothesis():
     
     print("\nHypothesis received. This will be used to guide the report generation.")
     return hypothesis
-
-def call_claude(system_prompt, user_prompt, max_tokens=4000):
-    """Helper function to call Claude with consistent parameters."""
-    try:
-        message = client.messages.create(
-            model="claude-3-5-sonnet-20241022",
-            max_tokens=max_tokens,
-            system=system_prompt,
-            messages=[
-                {
-                    "role": "user",
-                    "content": user_prompt
-                }
-            ],
-            temperature=0.3
-        )
-        return message.content[0].text
-    except Exception as e:
-        print(f"Error calling Claude: {e}")
-        raise
 
 def analyze_data(paper_number, hypothesis):
     """Analyze survey data."""
@@ -168,8 +183,10 @@ def analyze_data(paper_number, hypothesis):
             data_description += f"Row count: {item['row_count']}\n"
             data_description += f"Preview (first 10 rows):\n```\n{item['preview']}\n```\n"
     
-    user_prompt = f"""
-    I need you to conduct a comprehensive analysis of the data files for Paper #{paper_number}.
+    prompt = f"""
+    You are a Data Analyst examining OSF journal survey data for Paper #{paper_number}.
+    
+    Your task is to conduct a comprehensive analysis of the data files in the Paper #{paper_number} directory.
     
     IMPORTANT RESEARCH HYPOTHESIS:
     ```
@@ -215,12 +232,19 @@ def analyze_data(paper_number, hypothesis):
     Your analysis should include specific numerical results (means, standard deviations, correlation coefficients, p-values where appropriate). Provide tables of results where helpful. This is not a theoretical exercise - actually analyze the data provided to test the stated hypothesis.
     """
     
-    system_prompt = "You are a skilled data analyst specializing in research data. Always provide specific numerical results and detailed analysis of actual data, not theoretical instructions."
-    
     print(f"Performing data analysis for Paper #{paper_number}...")
     
-    # Call Claude to analyze the data
-    analysis = call_claude(system_prompt, user_prompt, max_tokens=4000)
+    # Call GPT to analyze the data
+    response = client.chat.completions.create(
+        model="gpt-4-turbo",
+        messages=[
+            {"role": "system", "content": "You are a skilled data analyst specializing in research data. Always provide specific numerical results and detailed analysis of actual data, not theoretical instructions."},
+            {"role": "user", "content": prompt}
+        ],
+        temperature=0.2
+    )
+    
+    analysis = response.choices[0].message.content
     
     # Save the analysis in the Output directory
     output_path = output_dir / "data_analysis.md"
@@ -246,8 +270,8 @@ def review_methodology(paper_number, analysis, hypothesis):
     survey_design = read_text_files(data_dir)
     
     # Create the prompt for methodology review
-    user_prompt = f"""
-    I need you to conduct a comprehensive review of the research design for Paper #{paper_number}.
+    prompt = f"""
+    You are a Methodology Expert reviewing the research design for Paper #{paper_number}.
     
     RESEARCH HYPOTHESIS:
     ```
@@ -269,7 +293,7 @@ def review_methodology(paper_number, analysis, hypothesis):
     1. Research Questions and Hypotheses:
        - Evaluate if the research hypothesis is clearly articulated and appropriately focused 
        - Assess if the hypothesis is testable with the collected data
-       - Evaluate how well the experiments mentioned in the hypothesis are designed to test the proposed effects
+       - Evaluate how well the seven experiments mentioned in the hypothesis are designed to test the speed-abstraction effect
        - Recommend specific improvements to the research questions
     
     2. Sampling Strategy:
@@ -280,8 +304,8 @@ def review_methodology(paper_number, analysis, hypothesis):
     
     3. Experimental Design:
        - Evaluate the design of each experiment mentioned in the hypothesis
-       - Assess the experimental manipulations and controls
-       - Evaluate the measurement approaches
+       - Assess the manipulation of speed (virtual vs. physical)
+       - Evaluate the measurement of abstraction levels
        - Identify potential confounding variables
     
     4. Survey Instrument Validity and Reliability:
@@ -296,7 +320,7 @@ def review_methodology(paper_number, analysis, hypothesis):
        - Evaluate the data collection method (online, in-person, etc.) and associated biases
     
     6. Data Analysis Methods:
-       - Evaluate the appropriateness of statistical tests used
+       - Evaluate the appropriateness of statistical tests used to test the speed-abstraction effect
        - Assess if assumptions for these tests were met
        - Identify any missing or additional analyses that should be conducted
        - Suggest specific alternative analyses if applicable
@@ -315,12 +339,19 @@ def review_methodology(paper_number, analysis, hypothesis):
     Your review should be thorough, specific, and actionable - focusing on the actual methodology used rather than general principles.
     """
     
-    system_prompt = "You are a research methodologist with expertise in survey design and experimental methods. Provide concrete, specific methodological assessments based on actual research designs, not general principles."
-    
     print(f"Reviewing methodology for Paper #{paper_number}...")
     
-    # Call Claude to review the methodology
-    review = call_claude(system_prompt, user_prompt, max_tokens=4000)
+    # Call GPT to review the methodology
+    response = client.chat.completions.create(
+        model="gpt-4-turbo",
+        messages=[
+            {"role": "system", "content": "You are a research methodologist with expertise in survey design and experimental methods. Provide concrete, specific methodological assessments based on actual research designs, not general principles."},
+            {"role": "user", "content": prompt}
+        ],
+        temperature=0.3
+    )
+    
+    review = response.choices[0].message.content
     
     # Save the review in the Output directory
     output_path = output_dir / "methodology_review.md"
@@ -336,8 +367,8 @@ def create_report_outline(paper_number, analysis, review, hypothesis):
     output_dir = paper_dir / "Output"
     
     # Create the prompt for report outline
-    user_prompt = f"""
-    I need you to create a detailed outline for a research report based on OSF journal survey data.
+    prompt = f"""
+    You are a Research Writer creating a detailed outline for a research report based on OSF journal survey data.
     
     RESEARCH HYPOTHESIS:
     ```
@@ -356,7 +387,7 @@ def create_report_outline(paper_number, analysis, review, hypothesis):
     {review}
     ```
     
-    Your task is to create a comprehensive, detailed outline for a scholarly research report that tests the effects described in the hypothesis. The outline should:
+    Your task is to create a comprehensive, detailed outline for a scholarly research report that tests the speed-abstraction effect described in the hypothesis. The outline should:
     
     1. Follow standard academic paper structure with all major sections and subsections
     2. Include specific bullet points under each section detailing exactly what content will be covered
@@ -366,21 +397,21 @@ def create_report_outline(paper_number, analysis, review, hypothesis):
     
     The outline must include these sections:
     
-    1. Title (suggest a specific, descriptive title related to the research topic)
+    1. Title (suggest a specific, descriptive title related to the speed-abstraction effect)
     
     2. Abstract (bullet points for what should be included)
     
     3. Introduction
-       - Background literature review (specific topics related to the research area)
+       - Background literature review (specific topics related to movement speed and abstract thinking)
        - Problem statement
        - Research questions/hypotheses (be specific about each question)
        - Significance of the study
     
     4. Theoretical Framework
-       - Key theoretical concepts
-       - Relationship between variables
+       - Speed-abstraction schema
+       - Relationship between virtual and physical movement
        - Connection to decision-making processes
-       - Alternative explanations
+       - Alternative explanations (psychological distance, affect, fluency, spatial orientation)
     
     5. Methods
        - Participants (demographics, sampling approach)
@@ -392,11 +423,11 @@ def create_report_outline(paper_number, analysis, review, hypothesis):
        - Descriptive Statistics (which specific statistics to report)
        - Inferential Statistics (which analyses and findings to present)
        - Tables and Figures (describe what each table/figure should show)
-       - Separate sections for each experiment mentioned in the hypothesis
+       - Separate sections for each of the seven experiments mentioned in the hypothesis
     
     7. Discussion
        - Interpretation of Key Findings (for each major finding)
-       - Evaluation of the main effects
+       - Evaluation of the speed-abstraction effect
        - Comparison with Existing Literature
        - Limitations (methodological issues identified in the review)
        - Implications (theoretical and practical)
@@ -419,12 +450,20 @@ def create_report_outline(paper_number, analysis, review, hypothesis):
     This outline will serve as the comprehensive blueprint for writing the actual paper, so be thorough and specific.
     """
     
-    system_prompt = "You are an experienced academic writer who specializes in creating detailed, comprehensive research paper outlines. Your outlines are specific, thorough, and provide clear direction for paper writing."
-    
     print(f"Creating report outline for Paper #{paper_number}...")
     
-    # Call Claude to create the outline
-    outline = call_claude(system_prompt, user_prompt, max_tokens=4000)
+    # Call GPT to create the outline
+    response = client.chat.completions.create(
+        model="gpt-4-turbo",
+        messages=[
+            {"role": "system", "content": "You are an experienced academic writer who specializes in creating detailed, comprehensive research paper outlines. Your outlines are specific, thorough, and provide clear direction for paper writing."},
+            {"role": "user", "content": prompt}
+        ],
+        temperature=0.7,
+        max_tokens=3000
+    )
+    
+    outline = response.choices[0].message.content
     
     # Save the outline in the Output directory
     output_path = output_dir / "report_outline.md"
@@ -440,8 +479,8 @@ def write_report_draft(paper_number, outline, analysis, review, hypothesis):
     output_dir = paper_dir / "Output"
     
     # Create the prompt for report draft
-    user_prompt = f"""
-    I need you to write a comprehensive, detailed academic research report based on OSF journal survey data.
+    prompt = f"""
+    You are a Research Writer drafting a detailed research report based on OSF journal survey data.
     
     RESEARCH HYPOTHESIS:
     ```
@@ -465,19 +504,19 @@ def write_report_draft(paper_number, outline, analysis, review, hypothesis):
     {review}
     ```
     
-    Your task is to write a comprehensive, detailed academic research report that tests the effects described in the hypothesis. The report should:
+    Your task is to write a comprehensive, detailed academic research report that tests the speed-abstraction effect described in the hypothesis. The report should:
     
-    1. Follow the structure in the outline precisely
-    2. Incorporate ALL specific numerical findings from the data analysis
-    3. Address ALL methodological considerations from the review
-    4. Cite relevant literature throughout (create appropriate citations where needed)
-    5. Include detailed tables and describe specific visualizations where relevant
+    1. Follows the structure in the outline precisely
+    2. Incorporates ALL specific numerical findings from the data analysis
+    3. Addresses ALL methodological considerations from the review
+    4. Cites relevant literature throughout (create appropriate citations where needed)
+    5. Includes detailed tables and describes specific visualizations where relevant
     
     Specific requirements:
     
-    - Introduction: Include at least 3 paragraphs with relevant background literature and clearly articulated research questions
-    - Theoretical Framework: Explain the key theoretical concepts in detail
-    - Methods: Provide detailed subsections on participants, materials, and procedures for each experiment mentioned in the hypothesis (at least 500 words total)
+    - Introduction: Include at least 3 paragraphs with relevant background literature on speed perception and abstract thinking, and clearly articulated research questions
+    - Theoretical Framework: Explain the speed-abstraction schema in detail
+    - Methods: Provide detailed subsections on participants, materials, and procedures for each of the seven experiments mentioned in the hypothesis (at least 500 words total)
     - Results: Report specific statistical findings with exact numbers, p-values, effect sizes, and confidence intervals where appropriate for each experiment
     - Discussion: Include at least 4 paragraphs interpreting results, discussing limitations, and suggesting implications
     - Conclusion: Summarize key findings and suggest at least 3 specific future research directions
@@ -486,12 +525,20 @@ def write_report_draft(paper_number, outline, analysis, review, hypothesis):
     The report should be thorough, detailed, and meet high standards for academic publication. The final product should be at least 2500 words and suitable for submission to a peer-reviewed journal.
     """
     
-    system_prompt = "You are an academic writer with experience in publishing journal articles. Produce detailed, comprehensive reports with specific statistical findings and thorough academic content."
-    
     print(f"Writing report draft for Paper #{paper_number}...")
     
-    # Call Claude to write the draft
-    draft = call_claude(system_prompt, user_prompt, max_tokens=4000)
+    # Call GPT to write the draft
+    response = client.chat.completions.create(
+        model="gpt-4-turbo",
+        messages=[
+            {"role": "system", "content": "You are an academic writer with experience in publishing journal articles. Produce detailed, comprehensive reports with specific statistical findings and thorough academic content."},
+            {"role": "user", "content": prompt}
+        ],
+        temperature=0.7,
+        max_tokens=4000
+    )
+    
+    draft = response.choices[0].message.content
     
     # Save the draft in the Output directory
     output_path = output_dir / "report_draft.md"
@@ -517,8 +564,8 @@ def review_report(paper_number, draft, hypothesis):
         methodology_review = f.read()
     
     # Create the prompt for report review
-    user_prompt = f"""
-    I need you to conduct a thorough, critical review of this research report draft focusing on methodological rigor, accurate reporting of findings, and scholarly writing.
+    prompt = f"""
+    You are a Methodology Expert reviewing a draft research report based on OSF journal survey data.
     
     RESEARCH HYPOTHESIS:
     ```
@@ -540,22 +587,22 @@ def review_report(paper_number, draft, hypothesis):
     {methodology_review}
     ```
     
-    Provide detailed feedback on:
+    Your task is to conduct a thorough, critical review of this report draft focusing on methodological rigor, accurate reporting of findings, and scholarly writing. Provide detailed feedback on:
     
     1. Overall Quality and Structure (organization, coherence, flow)
        - Evaluate each major section (intro, methods, results, discussion, conclusion)
-       - Assess how well the paper addresses the effects described in the hypothesis
+       - Assess how well the paper addresses the speed-abstraction effect described in the hypothesis
        - Identify specific areas where structure could be improved
     
     2. Methodological Accuracy and Completeness
-       - Verify that all methodological details for the experiments are correctly reported
+       - Verify that all methodological details for the seven experiments are correctly reported
        - Identify any missing methodological information
        - Assess if statistical analyses are appropriately described and interpreted
        - Check if appropriate statistical tests were used and reported correctly
     
     3. Results Reporting
        - Verify that all major findings from the data analysis are included
-       - Evaluate if the results properly test the proposed effects
+       - Evaluate if the results properly test the speed-abstraction effect
        - Check for accuracy of reported statistics, p-values, effect sizes
        - Evaluate completeness of results reporting
        - Assess if tables/figures are properly described and necessary
@@ -583,12 +630,20 @@ def review_report(paper_number, draft, hypothesis):
     Focus on substantive issues rather than minor stylistic concerns. Be specific, detailed, and actionable in your feedback.
     """
     
-    system_prompt = "You are a research methodologist and academic editor with expertise in reviewing scholarly papers. Be thorough, specific, and critical in your review, focusing on substantive methodological and reporting issues."
-    
     print(f"Reviewing report for Paper #{paper_number}...")
     
-    # Call Claude to review the report
-    feedback = call_claude(system_prompt, user_prompt, max_tokens=4000)
+    # Call GPT to review the report
+    response = client.chat.completions.create(
+        model="gpt-4-turbo",
+        messages=[
+            {"role": "system", "content": "You are a research methodologist and academic editor with expertise in reviewing scholarly papers. Be thorough, specific, and critical in your review, focusing on substantive methodological and reporting issues."},
+            {"role": "user", "content": prompt}
+        ],
+        temperature=0.3,
+        max_tokens=3000
+    )
+    
+    feedback = response.choices[0].message.content
     
     # Save the feedback in the Output directory
     output_path = output_dir / "report_feedback.md"
@@ -614,8 +669,8 @@ def finalize_report(paper_number, draft, feedback, hypothesis):
         review = f.read()
     
     # Create the prompt for finalizing the report
-    user_prompt = f"""
-    I need you to produce an exceptional, publication-ready final report that thoroughly tests and explores the effects described in the hypothesis.
+    prompt = f"""
+    You are a Research Writer finalizing a comprehensive research report based on OSF journal survey data.
     
     RESEARCH HYPOTHESIS:
     ```
@@ -644,16 +699,16 @@ def finalize_report(paper_number, draft, feedback, hypothesis):
     {review}
     ```
     
-    The report should:
+    Your task is to produce an exceptional, publication-ready final report that thoroughly tests and explores the speed-abstraction effect described in the hypothesis. The report should:
     
-    1. Address ALL feedback and suggestions from the review in detail
-    2. Significantly enhance the draft by adding more depth, rigor, and detail
-    3. Incorporate ALL key statistical findings from the data analysis with precise reporting
-    4. Feature a comprehensive methods section that addresses methodological concerns for all experiments
-    5. Include detailed tables for reporting results 
-    6. Describe visualizations that would enhance understanding (as if they were included)
-    7. Contain a sophisticated discussion that thoroughly examines implications
-    8. Provide a detailed conclusion with specific recommendations
+    1. Addresses ALL feedback and suggestions from the review in detail
+    2. Significantly enhances the draft by adding more depth, rigor, and detail
+    3. Incorporates ALL key statistical findings from the data analysis with precise reporting
+    4. Features a comprehensive methods section that addresses methodological concerns for all seven experiments
+    5. Includes detailed tables for reporting results 
+    6. Describes visualizations that would enhance understanding (as if they were included)
+    7. Contains a sophisticated discussion that thoroughly examines implications
+    8. Provides a detailed conclusion with specific recommendations
     
     Specific requirements for the final report:
     
@@ -669,12 +724,20 @@ def finalize_report(paper_number, draft, feedback, hypothesis):
     This should be an exemplary academic paper suitable for submission to a high-quality peer-reviewed journal.
     """
     
-    system_prompt = "You are an academic writer with experience producing thorough, detailed, and rigorous research reports for prestigious journals. Your reports are comprehensive, precise, and meticulously detailed."
-    
     print(f"Finalizing report for Paper #{paper_number}...")
     
-    # Call Claude to finalize the report
-    final_report = call_claude(system_prompt, user_prompt, max_tokens=4000)
+    # Call GPT to finalize the report
+    response = client.chat.completions.create(
+        model="gpt-4-turbo",
+        messages=[
+            {"role": "system", "content": "You are an academic writer with experience producing thorough, detailed, and rigorous research reports for prestigious journals. Your reports are comprehensive, precise, and meticulously detailed."},
+            {"role": "user", "content": prompt}
+        ],
+        temperature=0.7,
+        max_tokens=4000  # Reduced from 4500 to stay within limits
+    )
+    
+    final_report = response.choices[0].message.content
     
     # Save the final report in the Output directory
     output_path = output_dir / "final_report.md"
@@ -747,8 +810,8 @@ def main(paper_number: int):
         traceback.print_exc()
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='JCR Journal Report Agent - Claude Version')
-    parser.add_argument('--paper', type=int, required=True, help='Paper number to analyze')
+    parser = argparse.ArgumentParser(description='JCR Journal Report Agent')
+    parser.add_argument('--paper_number', type=int, required=True, help='Paper number to analyze')
     args = parser.parse_args()
     
-    main(args.paper)
+    main(args.paper_number)
