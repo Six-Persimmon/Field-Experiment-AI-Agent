@@ -32,7 +32,7 @@ from tqdm import tqdm
 
 
 
-def run_single_survey_response(llm, survey_prompt_template, survey_context, participant_info):
+def run_single_survey_response_json(llm, survey_prompt_template, survey_context, participant_info):
     """
     Generate a single survey response using LLM.
 
@@ -67,7 +67,7 @@ def run_single_survey_response(llm, survey_prompt_template, survey_context, part
     }
 
 
-def run_all_survey_responses(llm, participant_csv_path, survey_prompt_template, survey_context):
+def run_all_survey_responses_json(llm, participant_csv_path, survey_prompt_template, survey_context):
     """
     Run the survey across all participants listed in the CSV.
 
@@ -89,8 +89,69 @@ def run_all_survey_responses(llm, participant_csv_path, survey_prompt_template, 
             "Gender": row["Gender"],
             "Race": row["Race"]
         }
-        response_record = run_single_survey_response(
+        response_record = run_single_survey_response_json(
             llm, survey_prompt_template, survey_context, participant_info
+        )
+        responses.append(response_record)
+
+    return pd.DataFrame(responses)
+
+
+# This function is similar to the above but uses a string survey context instead of JSON.
+def run_single_survey_response_str(llm, survey_prompt_template, survey_str, participant_info):
+    """
+    Generate a single survey response using LLM.
+
+    Args:
+        llm: callable that takes in a prompt and returns a response.
+        survey_prompt_template: str with placeholders like $age, $gender, $race.
+        survey_str: string with survey context. Contains questions and instructions.
+        participant_info: dict with keys "name", "age", "gender", "race".
+
+    Returns:
+        dict with participant info and response text.
+    """
+    background_prompt = survey_prompt_template.replace("$age", str(participant_info["Age"])) \
+                                          .replace("$gender", participant_info["Gender"]) \
+                                          .replace("$race", participant_info["Race"])
+    question = survey_str
+    # combine the background prompt with the survey context to let the LLM response
+    full_prompt = f"{background_prompt}\n\nPlease answer the following question by replying ONLY the corresponding number of your choice:\n\n{question}"
+
+    response = llm(full_prompt)
+    return {
+        "ParticipantID": participant_info["ParticipantID"],
+        "Age": participant_info["Age"],
+        "Gender": participant_info["Gender"],
+        "Race": participant_info["Race"],
+        "Response": response
+    }
+
+
+def run_all_survey_responses_str(llm, participant_csv_path, survey_prompt_template, survey_str):
+    """
+    Run the survey across all participants listed in the CSV.
+
+    Args:
+        llm: callable that returns LLM response.
+        participant_csv_path: path to participant CSV file.
+        survey_prompt_template: string with placeholders.
+
+    Returns:
+        pd.DataFrame with all responses.
+    """
+    df_participants = pd.read_csv(participant_csv_path)
+    responses = []
+
+    for _, row in tqdm(df_participants.iterrows(), total=len(df_participants)):
+        participant_info = {
+            "ParticipantID": row["ParticipantID"],
+            "Age": row["Age"],
+            "Gender": row["Gender"],
+            "Race": row["Race"] 
+        }
+        response_record = run_single_survey_response_str(
+            llm, survey_prompt_template, survey_str, participant_info
         )
         responses.append(response_record)
 

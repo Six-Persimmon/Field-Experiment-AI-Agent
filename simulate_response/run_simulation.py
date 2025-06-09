@@ -6,9 +6,9 @@
 @Author  :   Shijian Liu
 @Version :   1.0
 @Contact :   lshijian405@gmail.com
-@Desc    :   None
+@Desc    :   This is the basic demo to run the survey simulation.
 '''
-from simulate_response import run_all_survey_responses
+from simulate_response import run_all_survey_responses_json
 from llm_openai import openai_llm
 
 # response template
@@ -19,7 +19,7 @@ with open("survey_response_template.txt", "r") as f:
 with open("test_survey.json", "r") as f:
     survey_context = f.read()
 
-responses_df = run_all_survey_responses(
+responses_df = run_all_survey_responses_json(
     llm=openai_llm,
     participant_csv_path="participant_pool.csv",
     survey_prompt_template=survey_template,

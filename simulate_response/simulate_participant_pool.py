@@ -40,7 +40,7 @@ while True:
 if use_balanced == 'yes':
     race_dist = {k: 1.0 / len(allowed_races) for k in allowed_races}
 else:
-    print("\n📊 Please enter race percentages (0–100).")
+    print("\n📊 Please enter race percentages (0 - 100).")
     race_raw = {}
     for label in allowed_races:
         while True:
@@ -58,7 +58,7 @@ else:
     race_dist = {k: v / total for k, v in race_raw.items()}
 
 # === Step 4: Get gender percentages ===
-print("\n Please enter gender percentages (0–100).")
+print("\n Please enter gender percentages (0 - 100).")
 gender_raw = {}
 for gender in allowed_genders:
     while True:
