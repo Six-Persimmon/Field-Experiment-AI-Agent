@@ -1,84 +1,62 @@
+## Research Report Outline: Understanding the Illusion of Algorithm Comprehension Through Explanation Access
+
 ### 1. Title
-- **Exploring the Illusion of Understanding Algorithms: The Role of Explanatory Access and Expertise Level**
+- "Empowerment or Illusion? Analyzing the Impact of Access to Algorithmic Explanations on User Perception and Understanding"
 
 ### 2. Abstract
-- **Objective**: Briefly state the purpose of the study and hypotheses.
-- **Methods**: Summarize the methodology including participant demographics, experimental design, and statistical tests used.
-- **Results**: Highlight key findings such as the significant effects of explanation access on perceived understanding and empowerment.
-- **Conclusion**: Note the implications of the findings for the design of algorithm explanations and future research directions.
-- **Keywords**: Include "algorithm understanding", "explanatory access", "empowerment", "illusion of understanding".
+- Summarize the motivation and background for the study.
+- Briefly describe the methodology (participants, experiments, data analysis).
+- Highlight key findings related to the research hypotheses.
+- Mention the implications of the findings for the design of algorithmic systems.
+- Note the article's contribution to the field of human-computer interaction.
 
 ### 3. Introduction
-- **Background Literature Review**:
-  - Review literature on algorithm transparency and user interaction.
-  - Discuss previous studies on the effects of explanation on user perception and trust.
-- **Problem Statement**:
-  - Emphasize the gap in understanding how access to algorithm explanations impacts user perception.
-- **Research Questions/Hypotheses**:
-  - H1: Access to algorithm explanations enhances perceived understanding and empowerment.
-  - H2: Explanations intended for the general public increase the illusion of understanding more than those for experts.
-  - H3: Non-instrumental explanations have a lesser effect on perceived understanding.
-- **Significance of the Study**:
-  - Discuss the practical implications for designers of algorithmic systems and policymakers.
+- **Background literature review**: Discuss existing research on algorithm transparency, user understanding, and the psychological impact of explanation access.
+- **Problem statement**: Address the gap in understanding the specific effects of explanation access on the perceived understanding of algorithms.
+- **Research questions/hypotheses**: Detail each hypothesis (H1, H2, H3) and their basis in the context of existing literature.
+- **Significance of the study**: Explain how this research contributes to better design practices in algorithmic systems and enhances user interaction.
 
 ### 4. Theoretical Framework
-- **Speed-Abstraction Schema**:
-  - Define and explain the theoretical basis for how movement speed may influence abstract thinking.
-- **Relationship between Virtual and Physical Movement**:
-  - Discuss theories linking physical actions and cognitive processing speeds to abstract thinking.
-- **Connection to Decision-Making Processes**:
-  - How speed and abstraction influence decision-making in various contexts.
-- **Alternative Explanations**:
-  - Explore psychological distance, affect, fluency, and spatial orientation as alternative mechanisms.
+- **Speed-abstraction schema**: Define and explain the concept; relate it to user interaction with algorithms.
+- **Relationship between virtual and physical movement**: Discuss how virtual interactions might mimic real-world interactions and influence cognitive processing.
+- **Connection to decision-making processes**: Examine how perceived understanding of algorithms affects user decisions.
+- **Alternative explanations**: Consider other psychological phenomena such as psychological distance, affect, cognitive fluency, and spatial orientation as confounding factors.
 
 ### 5. Methods
-- **Participants**:
-  - Detail demographic information, sampling strategy (e.g., random, stratified), and sample size.
-- **Materials/Instruments**:
-  - Describe the surveys and scales used for measuring understanding, empowerment, and other relevant variables.
-- **Procedure**:
-  - Outline the experimental design, data collection methods, and ethical considerations.
-- **Data Analysis Approach**:
-  - Specify statistical tests (ANOVA, t-tests), assumptions checked, and software used.
+- **Participants**: Describe the demographic characteristics, how participants were selected, and the sampling strategy used.
+- **Materials/Instruments**: Detail the survey instruments used, including scales for measuring understanding and empowerment.
+- **Procedure**: Outline the experimental setup, data collection methods, and adherence to ethical considerations.
+- **Data Analysis Approach**: Specify the use of descriptive statistics, correlation analysis, ANOVA, and effect size calculations.
 
 ### 6. Results
-- **Descriptive Statistics**:
-  - Report means, medians, and standard deviations for all key variables.
-  - Include participant demographics and conditions.
-- **Inferential Statistics**:
-  - Present results of ANOVA and t-tests, highlighting significant findings.
-  - Discuss correlation coefficients and effect sizes.
-- **Tables and Figures**:
-  - Table 1: Descriptive statistics for each variable.
-  - Figure 1: Bar graphs showing differences in understanding across conditions.
-  - Figure 2: Correlation matrices.
+- **Descriptive Statistics**: Report means, medians, and standard deviations for key variables such as Understanding, Empowerment1, and Empowerment2.
+- **Inferential Statistics**: Present ANOVA results and correlation coefficients; discuss findings in relation to each hypothesis.
+- **Tables and Figures**: Include visual representations of the statistical results; Table 1 for descriptive statistics, Figure 1 for correlations, and Table 2 for ANOVA results.
+- **Separate sections for each hypothesis**: Present data supporting or refuting each hypothesis individually.
 
 ### 7. Discussion
-- **Interpretation of Key Findings**:
-  - Discuss how access to explanations impacts perceived understanding and empowerment.
-  - Compare findings to hypotheses and explain any discrepancies.
-- **Evaluation of the Speed-Abstraction Effect**:
-  - Assess how well the data supported the theoretical framework.
-- **Comparison with Existing Literature**:
-  - Compare the results with similar studies.
-- **Limitations**:
-  - Address sample size, sampling method, and any potential biases.
-- **Implications**:
-  - Theoretical implications for understanding algorithm transparency.
-  - Practical implications for designing user-friendly algorithmic interfaces.
+- **Interpretation of Key Findings**: Discuss how the findings align or contrast with the original hypotheses and the implications of these results.
+- **Evaluation of the speed-abstraction effect**: Analyze the broader implications of the results on understanding algorithmic processes.
+- **Comparison with Existing Literature**: Situate results within the broader context of related research.
+- **Limitations**: Address methodological issues such as sampling biases and potential confounders.
+- **Implications**: Discuss theoretical implications for cognitive science and practical implications for designing user interfaces.
 
 ### 8. Conclusion
-- **Summary of Findings**:
-  - Recap the major findings and their implications.
-- **Recommendations**:
-  - Suggest practical actions for algorithm designers.
-- **Future Research Directions**:
-  - Propose areas for further investigation, including different populations and algorithm types.
+- **Summary of Findings**: Recapitulate the main findings and their significance.
+- **Recommendations**: Provide recommendations for system designers on how to effectively present algorithmic explanations.
+- **Future Research Directions**: Suggest areas for further investigation based on the study's limitations and findings.
 
 ### 9. References
-- **Include**:
-  - Peer-reviewed journal articles, books on cognitive psychology and human-computer interaction, previous research studies on algorithms.
+- Include peer-reviewed journal articles, books, and credible online sources that have been cited in the paper.
 
 ### 10. Appendices
-- **Appendix A**: Copies of surveys and scales used.
-- **Appendix B**: Detailed statistical output and analysis code.
+- **Appendix A**: Full survey instruments used in the experiments.
+- **Appendix B**: Additional data tables and figures not included in the main text.
+
+### Methodological Notes
+- Ensure clarity in linking the experiments to specific hypotheses in the research documentation.
+- Include detailed descriptions of each experiment's methodology.
+- Address sampling errors and confidence intervals in future reports.
+- Provide more comprehensive details on data collection procedures and ethical considerations.
+
+This detailed outline will serve as a structured guide for drafting the research paper, ensuring thorough coverage of all aspects related to the study's hypotheses and methodology.

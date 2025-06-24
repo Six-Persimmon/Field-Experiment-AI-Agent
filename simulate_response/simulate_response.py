@@ -27,9 +27,12 @@ import pandas as pd
 import logging
 import re
 import subprocess
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from llm_openai import openai_llm
 from tqdm import tqdm
-
 
 
 def run_single_survey_response_json(llm, survey_prompt_template, survey_context, participant_info):
