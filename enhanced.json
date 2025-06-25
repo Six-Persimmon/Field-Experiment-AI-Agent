@@ -1,0 +1,221 @@
+{
+  "original_with_comments": {
+    "survey": {
+      "theme": "The Theory of Planned Behavior Survey",
+      "purpose": "To assess consumer intentions and attitudes towards purchasing organic food",
+      "questions": [
+        {
+          "question_id": "Q1",
+          "question_text": "I intend to purchase organic food in the next month.",
+          "input_type": "multiple_choice",
+          "input_config": {
+            "options": [
+              "1=Strongly disagree",
+              "2",
+              "3",
+              "4",
+              "5",
+              "6",
+              "7=Strongly agree"
+            ]
+          }
+        },
+        {
+          "question_id": "Q2",
+          "question_text": "Buying organic food is beneficial to my health.",
+          "input_type": "multiple_choice",
+          "input_config": {
+            "options": [
+              "1=Strongly disagree",
+              "2",
+              "3",
+              "4",
+              "5",
+              "6",
+              "7=Strongly agree"
+            ]
+          }
+        },
+        {
+          "question_id": "Q3",
+          "question_text": "I feel confident in my ability to purchase organic food if I want to.",
+          "input_type": "multiple_choice",
+          "input_config": {
+            "options": [
+              "1=Strongly disagree",
+              "2",
+              "3",
+              "4",
+              "5",
+              "6",
+              "7=Strongly agree"
+            ]
+          }
+        },
+        {
+          "question_id": "Q4",
+          "question_text": "People who are important to me think I should purchase organic food.",
+          "input_type": "multiple_choice",
+          "input_config": {
+            "options": [
+              "1=Strongly disagree",
+              "2",
+              "3",
+              "4",
+              "5",
+              "6",
+              "7=Strongly agree"
+            ]
+          }
+        },
+        {
+          "question_id": "Q5",
+          "question_text": "The decision to buy organic food is entirely up to me.",
+          "input_type": "multiple_choice",
+          "input_config": {
+            "options": [
+              "1=Strongly disagree",
+              "2",
+              "3",
+              "4",
+              "5",
+              "6",
+              "7=Strongly agree"
+            ]
+          }
+        }
+      ]
+    },
+    "question_comments": [
+      {
+        "question_id": "Q1",
+        "comment": "Clear intention measurement, relevant to the survey's theme."
+      },
+      {
+        "question_id": "Q2",
+        "comment": "Accurately assesses perceived health benefits."
+      },
+      {
+        "question_id": "Q3",
+        "comment": "Captures self-efficacy related to buying behaviors."
+      },
+      {
+        "question_id": "Q4",
+        "comment": "Addresses social influence, an important aspect of TPB."
+      },
+      {
+        "question_id": "Q5",
+        "comment": "Assessing perceived behavioral control, aligns well with TPB."
+      }
+    ],
+    "overall_comment": "The survey effectively captures key components of the Theory of Planned Behavior; however, minor rephrasing for enhanced clarity could benefit the overall respondent experience."
+  },
+  "revised_survey": {
+    "theme": "The Theory of Planned Behavior Survey",
+    "purpose": "To assess consumer intentions and attitudes towards purchasing organic food",
+    "questions": [
+      {
+        "question_id": "Q1",
+        "question_text": "I plan to purchase organic food within the next month.",
+        "input_type": "multiple_choice",
+        "input_config": {
+          "options": [
+            "1=Strongly disagree",
+            "2",
+            "3",
+            "4",
+            "5",
+            "6",
+            "7=Strongly agree"
+          ]
+        }
+      },
+      {
+        "question_id": "Q2",
+        "question_text": "I believe that purchasing organic food has health benefits.",
+        "input_type": "multiple_choice",
+        "input_config": {
+          "options": [
+            "1=Strongly disagree",
+            "2",
+            "3",
+            "4",
+            "5",
+            "6",
+            "7=Strongly agree"
+          ]
+        }
+      },
+      {
+        "question_id": "Q3",
+        "question_text": "I am confident in my ability to buy organic food when I choose to.",
+        "input_type": "multiple_choice",
+        "input_config": {
+          "options": [
+            "1=Strongly disagree",
+            "2",
+            "3",
+            "4",
+            "5",
+            "6",
+            "7=Strongly agree"
+          ]
+        }
+      },
+      {
+        "question_id": "Q4",
+        "question_text": "My close friends and family believe that I should purchase organic food.",
+        "input_type": "multiple_choice",
+        "input_config": {
+          "options": [
+            "1=Strongly disagree",
+            "2",
+            "3",
+            "4",
+            "5",
+            "6",
+            "7=Strongly agree"
+          ]
+        }
+      },
+      {
+        "question_id": "Q5",
+        "question_text": "I have complete control over my decision to purchase organic food.",
+        "input_type": "multiple_choice",
+        "input_config": {
+          "options": [
+            "1=Strongly disagree",
+            "2",
+            "3",
+            "4",
+            "5",
+            "6",
+            "7=Strongly agree"
+          ]
+        }
+      }
+    ]
+  },
+  "explanations": {
+    "question_1": {
+      "change": "Clarified the wording",
+      "reason": "Clear and simple language increases comprehension and ensures that respondents do not face confusion about the satisfaction rating."
+    },
+    "question_2": {
+      "change": "Added a likelihood scale",
+      "reason": "A likelihood scale better captures respondents' intent in recommending the product, allowing for a more nuanced understanding of customer loyalty."
+    },
+    "question_3": {
+      "change": "Changed to 'Select all that apply'",
+      "reason": "This change allows respondents to identify multiple features that they value, ensuring more comprehensive feedback rather than forcing them to choose just one."
+    },
+    "question_4": {
+      "change": "Clarified ease of navigation phrasing",
+      "reason": "Using straightforward language ensures that respondents understand what is being asked regarding their experience with the website."
+    },
+    "question_5": {
+      "change": "Maintained as open-ended for qualitative insights.",
+      "reason": "Retaining this format allows respondents to express detailed and specific suggestions, which can provide better directions for improvements."
+    }
+  }
+}
