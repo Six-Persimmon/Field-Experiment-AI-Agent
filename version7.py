@@ -1867,10 +1867,7 @@ class QualtricsAndMTurkAutomation:
             "assignments": assignments,
             "approved_count": approved_count
         }
-    # <<< END OF MODIFICATIONS >>>
 
-# ========== Simulated Data Collection ==========
-# This section is added based on run_simulation.py
 
 # ========== Simulated Data Collection ==========
 # This section is added based on run_simulation.py
@@ -1943,7 +1940,7 @@ def collect_simulated_data():
         survey_json = json.loads(survey_context)
         question_defs = survey_json.get("questions")
         if not question_defs:
-            raise ValueError("在 survey_context JSON 中找不到 'questions' 列表")
+            raise ValueError("no question in survey_context JSON ")
 
         # ---- build the output list ----
         output_list = []
@@ -1956,7 +1953,7 @@ def collect_simulated_data():
 
             col = f"Q{idx+1}"
             if col not in qdf.columns:
-                raise KeyError(f"找不到列 {col}，请确认问题数量和回答列一致")
+                raise KeyError(f"can't find {col}")
             answers = qdf[col].tolist()
 
             output_list.append({
