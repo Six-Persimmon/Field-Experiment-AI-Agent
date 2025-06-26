@@ -151,7 +151,12 @@ def run_debias_pipeline(
     """
 
     # 1) Load the fixed pre‐existing pickle
-    df = pd.read_pickle("survey_with_embeddings.pkl")
+    # df = pd.read_pickle("survey_with_embeddings.pkl")
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    pickle_path = os.path.join(base_dir, "survey_with_embeddings.pkl")
+    if not os.path.exists(pickle_path):
+        raise FileNotFoundError(f"Cannot find embeddings pickle at {pickle_path}")
+    df = pd.read_pickle(pickle_path)
 
     # 2) Stack embeddings and responses
     embeddings = np.vstack(df["Embedding"].tolist())
