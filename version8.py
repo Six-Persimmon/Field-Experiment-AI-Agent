@@ -671,21 +671,61 @@ Your tasks:
                 if not user_feedback:
                     print("No feedback provided. Returning to menu.")
                     continue
+                
+                # --- START: MODIFIED CODE ---
 
-                enhanced_task_description = (
-                    "Review and enhance the EXACT survey provided in the input. "
-                    "DO NOT generate a default or generic survey. "
-                    "Your task is to improve the specific questions and structure of the provided survey "
-                    "based on the user's feedback. Make specific modifications to improve question clarity, "
-                    "reduce bias, and align with best practices in survey methodology. "
-                    "Provide detailed explanations of changes made."
-                )
+                # Convert the current survey state to a clean JSON string for the prompt
+                survey_json_to_enhance = json.dumps(self.enhanced_dict.get('revised_survey', self.enhanced_dict), indent=2)
+
+                # Create a single, powerful prompt that leaves no room for ambiguity.
+                # This prompt explicitly tells the agent to modify the provided JSON and defines the exact output structure.
+                enhanced_task_description = f"""
+                You are a survey design expert. Your task is to revise the JSON survey provided below based on the user's feedback.
+
+                **CRITICAL INSTRUCTIONS:**
+                1.  You MUST modify the EXACT JSON survey provided in the "SURVEY TO MODIFY" section.
+                2.  DO NOT generate a new survey from scratch. Do not use a default template.
+                3.  Apply the user's feedback to improve the questions, options, or structure.
+                4.  Your response MUST be a single JSON object with two keys: 'revised_survey' and 'explanations'.
+                5.  The 'revised_survey' MUST conform to the structure of the original survey.
+
+                --- SURVEY TO MODIFY ---
+                ```json
+                {survey_json_to_enhance}
+                ```
+
+                --- USER FEEDBACK ---
+                {user_feedback}
+
+                --- REQUIRED OUTPUT FORMAT ---
+                Provide your response as a single, valid JSON object like this:
+                ```json
+                {{
+                    "revised_survey": {{
+                        "theme": "The original or an improved theme",
+                        "purpose": "The original or an improved purpose",
+                        "questions": [
+                            {{
+                                "question_id": "q1",
+                                "question_text": "The revised question text...",
+                                "input_type": "...",
+                                "input_config": {{...}}
+                            }}
+                        ]
+                    }},
+                    "explanations": {{
+                        "q1": "Explanation for why you changed question 1.",
+                        "overall": "General comments on the enhancements made."
+                    }}
+                }}
+                ```
+                """
 
                 enhancement_task = Task(
                     name="enhance_survey_iteratively",
                     description=enhanced_task_description,
                     agent=self.enhancement_agent,
-                    expected_output="A JSON object containing the enhanced survey and explanations of changes.",
+                    expected_output="A single JSON object containing the 'revised_survey' and 'explanations' keys.",
                     output_format=OutputFormat.JSON
                 )
 
@@ -695,40 +735,44 @@ Your tasks:
                     process=Process.sequential,
                     verbose=True
                 )
-
-                survey_json = json.dumps(self.enhanced_dict, indent=2)
-                enhancement_input = {
-                    'original_survey': survey_json,
-                    'survey_structure': f"The survey has the following structure:\\nTheme: {self.enhanced_dict.get('revised_survey', {}).get('theme', 'Unknown')}\\nNumber of questions: {len(self.enhanced_dict.get('revised_survey', {}).get('questions', []))}",
-                    'user_feedback': user_feedback,
-                    'instruction': "Please enhance this EXACT survey. Do not replace it with a default survey template. Preserve the general structure and theme, but improve the questions based on the feedback provided."
-                }
-
+                
                 print("\n=== Running AI Enhancement ===")
-                enhancement_result = enhancement_crew.kickoff(inputs=enhancement_input)
+                # We no longer need a complex input dictionary, as everything is in the task description.
+                enhancement_result = enhancement_crew.kickoff()
+
+                # --- END: MODIFIED CODE ---
 
                 result_raw = enhancement_result.raw.strip()
                 if result_raw.startswith("```"):
-                    result_raw = result_raw.split("\n", 1)[1].rsplit("```", 1)[0]
-                if result_raw.startswith("json"):
-                    result_raw = result_raw[4:].strip()
-
+                    # Handle ```json ... ``` or ``` ... ```
+                    if result_raw.startswith("```json"):
+                        result_raw = result_raw.split("```json", 1)[1]
+                    else:
+                        result_raw = result_raw.split("```", 1)[1]
+                    result_raw = result_raw.rsplit("```", 1)[0].strip()
+                
                 try:
-                    enhanced_result = self._process_enhancement_result(result_raw, self.enhanced_dict)
+                    # With the new prompt, the output should be more reliable.
+                    # We can simplify the processing.
+                    enhanced_result = json.loads(result_raw)
+                    
+                    # Validate the output has the required structure
+                    if 'revised_survey' not in enhanced_result or 'questions' not in enhanced_result['revised_survey']:
+                         raise ValueError("The AI's response was missing the required 'revised_survey' structure.")
+
                     self.enhanced_dict = enhanced_result
 
                     print("\n=== Enhancement Complete ===")
                     self._print_survey_summary(self.enhanced_dict)
 
                 except json.JSONDecodeError as e:
-                    print(f"Error processing enhancement result: {e}")
-                    print("The original survey will be retained.")
+                    print(f"\nError: Failed to parse the AI's JSON response. The original survey will be retained.")
+                    print(f"Parsing Error: {e}")
+                    print(f"Raw output from AI:\n---\n{result_raw}\n---")
                 except ValueError as e:
-                    print(f"Error: {e}")
-                    print("The original survey will be retained.")
+                    print(f"\nError: {e}. The original survey will be retained.")
                 except Exception as e:
-                    print(f"Unexpected error: {e}")
-                    print("The original survey will be retained.")
+                    print(f"\nAn unexpected error occurred: {e}. The original survey will be retained.")
 
             elif choice == "3":
                 self._manual_edit()
@@ -1324,76 +1368,13 @@ class QualtricsClient:
         print(f"Creating survey: {survey_name}")
 
         if not survey_template:
-            survey_payload = {
-                "SurveyName": survey_name,
-                "Language": "EN",
-                "ProjectCategory": "CORE",
-                "Questions": {
-                    "QID1": {
-                        "QuestionText": "What is your age?",
-                        "QuestionType": "MC",
-                        "Selector": "SAVR",
-                        "SubSelector": "TX",
-                        "Configuration": {
-                            "QuestionDescriptionOption": "UseText"
-                        },
-                        "Validation": {
-                            "Settings": {
-                                "ForceResponse": "OFF",
-                                "Type": "None"
-                            }
-                        },
-                        "Choices": {
-                            "1": {"Display": "18-24"},
-                            "2": {"Display": "25-34"},
-                            "3": {"Display": "35-44"},
-                            "4": {"Display": "45-54"},
-                            "5": {"Display": "55-64"},
-                            "6": {"Display": "65+"}
-                        }
-                    },
-                    "QID2": {
-                        "QuestionText": "How satisfied are you with our product?",
-                        "QuestionType": "Likert",
-                        "Selector": "LSL",
-                        "SubSelector": "TX",
-                        "Configuration": {
-                            "QuestionDescriptionOption": "UseText"
-                        },
-                        "Validation": {
-                            "Settings": {
-                                "ForceResponse": "OFF",
-                                "Type": "None"
-                            }
-                        },
-                        "Choices": {
-                            "1": {"Display": "Very dissatisfied"},
-                            "2": {"Display": "Dissatisfied"},
-                            "3": {"Display": "Neutral"},
-                            "4": {"Display": "Satisfied"},
-                            "5": {"Display": "Very satisfied"}
-                        }
-                    },
-                    "QID3": {
-                        "QuestionText": "Any additional comments?",
-                        "QuestionType": "TE",
-                        "Selector": "ML",
-                        "Configuration": {
-                            "QuestionDescriptionOption": "UseText"
-                        },
-                        "Validation": {
-                            "Settings": {
-                                "ForceResponse": "OFF",
-                                "Type": "None"
-                            }
-                        }
-                    }
-                }
-            }
-        else:
-            survey_payload = survey_template
-            if "ProjectCategory" not in survey_payload:
-                survey_payload["ProjectCategory"] = "CORE"
+            # The default survey payload has been removed as per the request.
+            # You would typically raise an error or handle this case.
+            raise ValueError("A survey_template must be provided to create a survey.")
+
+        survey_payload = survey_template
+        if "ProjectCategory" not in survey_payload:
+            survey_payload["ProjectCategory"] = "CORE"
 
         url = f"{self.base_url}survey-definitions"
         payload = json.dumps(survey_payload)
