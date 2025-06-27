@@ -4,11 +4,11 @@
     "num_llms": 6,
     "llm_resp": [
       4,
+      5,
+      5,
       4,
-      4,
-      4,
-      4,
-      4
+      5,
+      5
     ]
   },
   {
@@ -16,11 +16,11 @@
     "num_llms": 6,
     "llm_resp": [
       6,
-      5,
+      6,
       6,
       5,
-      5,
-      5
+      6,
+      6
     ]
   },
   {
@@ -28,11 +28,11 @@
     "num_llms": 6,
     "llm_resp": [
       5,
+      4,
+      4,
       6,
-      5,
-      6,
-      6,
-      6
+      4,
+      4
     ]
   },
   {
@@ -40,20 +40,20 @@
     "num_llms": 6,
     "llm_resp": [
       4,
-      4,
       3,
+      5,
       4,
       5,
-      4
+      5
     ]
   },
   {
     "Question": "Do you consider the decision to buy organic food primarily as your personal choice? Choices: 1-1=Strongly disagree, 2-2, 3-3, 4-4, 5-5, 6-6, 7-7=Strongly agree",
     "num_llms": 6,
     "llm_resp": [
+      6,
       5,
       6,
-      4,
       6,
       6,
       6

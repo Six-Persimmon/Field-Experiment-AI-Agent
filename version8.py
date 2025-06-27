@@ -18,7 +18,6 @@ import sys
 # This ensures that 'from llm_openai import openai_llm' in simulate_response.py works correctly
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), 'simulate_response')))
 
-# MODIFIED: Corrected the import statements for the simulation modules
 from simulate_response import run_all_survey_responses_json
 from llm_openai import openai_llm
 from debias.debias import run_debias_pipeline
@@ -651,7 +650,7 @@ Your tasks:
             print("3. Manually edit survey JSON")
             print("4. Save survey to file")
             print("5. Deploy survey to Qualtrics")
-            print("6. Return to Main Menu") # MODIFIED: Text changed
+            print("6. Return to Main Menu") 
 
             choice = input("\nEnter your choice (1-6): ")
 
@@ -741,11 +740,11 @@ Your tasks:
                 print(f"Survey saved to {filename}")
 
             elif choice == "5":
-                self._deploy_to_qualtrics() # MODIFIED: No longer returns, so the loop continues
+                self._deploy_to_qualtrics() 
 
             elif choice == "6":
-                print("Returning to Main Menu...") # MODIFIED: New message
-                return # MODIFIED: Exits this method to go back to main()
+                print("Returning to Main Menu...") 
+                return 
 
             else:
                 print("Invalid choice. Please enter a number from 1 to 6.")
@@ -1216,6 +1215,35 @@ class QualtricsClient:
                 print(f"Response: {response.text}")
         except Exception as e:
             print(f"Error testing connection: {str(e)}")
+
+    def get_survey_questions(self, survey_id: str) -> dict:
+        """
+        Retrieves the questions and their export tags for a given survey.
+        
+        Args:
+            survey_id (str): The ID of the survey.
+            
+        Returns:
+            dict: A dictionary mapping question export tags (e.g., 'QID1') to question text.
+        """
+        print(f"Retrieving question definitions for survey: {survey_id}")
+        url = f"{self.base_url}survey-definitions/{survey_id}"
+        response = self.session.get(url, headers=self.headers, verify=self.verify, timeout=10)
+        response.raise_for_status()
+        
+        survey_definition = response.json().get("result", {})
+        questions = survey_definition.get("Questions", {})
+        
+        question_map = {}
+        for qid, q_data in questions.items():
+            export_tag = q_data.get("DataExportTag", qid)
+            question_text = q_data.get("QuestionText", "N/A")
+            # Remove HTML tags from question text for cleaner CSV
+            clean_text = re.sub('<[^<]+?>', '', question_text).strip()
+            question_map[export_tag] = clean_text
+            
+        print(f"Found {len(question_map)} questions.")
+        return question_map
 
     def get_survey_responses(self, survey_id: str, file_format="csv") -> pd.DataFrame:
         """
@@ -1760,10 +1788,49 @@ class QualtricsAndMTurkAutomation:
             "survey_link": survey_link,
             "hit_id":      hit_id
         }
+    
+    def _format_df_with_interleaved_questions(self, responses_df: pd.DataFrame, question_map: dict) -> pd.DataFrame:
+        """
+        Helper method to reformat a DataFrame to have interleaved question and answer columns.
         
+        Args:
+            responses_df (pd.DataFrame): The DataFrame with survey responses.
+            question_map (dict): A dictionary mapping question export tags to question text.
+            
+        Returns:
+            pd.DataFrame: A reformatted DataFrame.
+        """
+        if not question_map or responses_df.empty:
+            return responses_df
+
+        question_cols_in_df = [col for col in responses_df.columns if col in question_map]
+        meta_cols = [col for col in responses_df.columns if col not in question_cols_in_df]
+        
+        try:
+            # Sort columns numerically (e.g., QID1, QID2, QID10)
+            question_cols_in_df.sort(key=lambda x: int(re.findall(r'\d+', x)[0]))
+        except (IndexError, TypeError):
+            # Fallback to alphanumeric sort if no numbers are found in tags
+            question_cols_in_df.sort()
+
+        # Build the list of new interleaved columns and their data
+        interleaved_data = {}
+        for i, q_col in enumerate(question_cols_in_df, 1):
+            interleaved_data[f'Question {i}'] = question_map.get(q_col, "Unknown Question")
+            interleaved_data[f'Answer {i}'] = responses_df[q_col]
+        
+        # Create the new DataFrame from this data
+        final_df = pd.DataFrame(interleaved_data)
+
+        # Join the metadata back in, using the original index to ensure alignment
+        # This will add metadata columns at the end.
+        final_df = final_df.join(responses_df[meta_cols])
+
+        return final_df
+
     def collect_and_process_results(self, survey_id: str, hit_id: str, auto_approve: bool = False):
         """
-        Fetches data from Qualtrics and MTurk, merges them, and optionally approves assignments.
+        Fetches data from Qualtrics and MTurk, merges them, formats with questions, and optionally approves.
         
         Args:
             survey_id (str): The Qualtrics Survey ID.
@@ -1771,32 +1838,37 @@ class QualtricsAndMTurkAutomation:
             auto_approve (bool): Whether to automatically approve valid assignments.
             
         Returns:
-            dict: A dictionary containing the merged responses and other processing info.
+            dict: A dictionary containing the formatted merged responses and other processing info.
         """
         print(f"Collecting results for Survey ID: {survey_id} and HIT ID: {hit_id}")
 
-        # 1. Get Qualtrics Responses
+        # 1. Get Qualtrics Questions
+        try:
+            question_map = self.qualtrics.get_survey_questions(survey_id)
+        except Exception as e:
+            print(f"Warning: Could not retrieve survey questions: {e}. The output will not contain question text.")
+            question_map = {}
+
+        # 2. Get Qualtrics Responses
         qualtrics_df = self.qualtrics.get_survey_responses(survey_id)
 
-        # 2. Get MTurk Assignments
+        # 3. Get MTurk Assignments
         assignments = self.mturk.get_hit_assignments(hit_id)
         if not assignments:
-            print("No MTurk assignments found for this HIT.")
+            print("No MTurk assignments found for this HIT. Formatting Qualtrics data only.")
+            formatted_df = self._format_df_with_interleaved_questions(qualtrics_df, question_map)
             return {
-                "responses": qualtrics_df,
+                "responses": formatted_df,
                 "assignments": [],
                 "approved_count": 0
             }
 
-        # 3. Process MTurk Assignments to extract completion codes
+        # 4. Process MTurk Assignments to extract completion codes
         mturk_data = []
         for a in assignments:
-            # The answer is an XML string, we need to parse it
             try:
-                # The name 'completion_code' matches the <input> name in the HIT question HTML
                 answer_xml = a['Answer']
                 root = ET.fromstring(answer_xml)
-                # Namespace is often present and needed to find tags correctly
                 namespace_match = re.match(r'\{.*\}', root.tag)
                 namespace = namespace_match.group(0) if namespace_match else ''
                 
@@ -1814,9 +1886,10 @@ class QualtricsAndMTurkAutomation:
                 print(f"Warning: Could not parse answer for assignment {a['AssignmentId']}: {e}")
 
         if not mturk_data:
-            print("Could not parse any MTurk assignments.")
+            print("Could not parse any MTurk assignments. Returning formatted Qualtrics data only.")
+            formatted_df = self._format_df_with_interleaved_questions(qualtrics_df, question_map)
             return {
-                "responses": qualtrics_df,
+                "responses": formatted_df,
                 "assignments": assignments,
                 "approved_count": 0
             }
@@ -1825,15 +1898,14 @@ class QualtricsAndMTurkAutomation:
         print("\nMTurk Data Preview:")
         print(mturk_df.head())
 
-        # 4. Merge Qualtrics and MTurk data
-        # The completion code submitted by the worker should match the 'ResponseID' from Qualtrics
+        # 5. Merge Qualtrics and MTurk data
         if 'ResponseID' not in qualtrics_df.columns:
             raise KeyError("The column 'ResponseID' was not found in the Qualtrics data. Cannot merge with MTurk results.")
         if mturk_df.empty or 'completion_code' not in mturk_df.columns:
-            print("Warning: No valid completion codes found in MTurk data. Returning only Qualtrics data.")
-            return {"responses": qualtrics_df, "assignments": assignments, "approved_count": 0}
+            print("Warning: No valid completion codes found in MTurk data. Returning only formatted Qualtrics data.")
+            formatted_df = self._format_df_with_interleaved_questions(qualtrics_df, question_map)
+            return {"responses": formatted_df, "assignments": assignments, "approved_count": 0}
 
-        # Ensure column types are compatible for merging
         qualtrics_df['ResponseID'] = qualtrics_df['ResponseID'].astype(str)
         mturk_df['completion_code'] = mturk_df['completion_code'].astype(str)
         
@@ -1842,17 +1914,19 @@ class QualtricsAndMTurkAutomation:
             mturk_df,
             left_on='ResponseID',
             right_on='completion_code',
-            how='inner' # Use 'inner' to only keep matched records
+            how='inner'
         )
         print(f"\nSuccessfully merged {len(merged_df)} records from Qualtrics and MTurk.")
         if merged_df.empty:
             print("Warning: No records could be matched between Qualtrics and MTurk based on the completion code.")
 
-        # 5. Auto-approve assignments if requested
+        # 6. Format the final DataFrame with interleaved questions and answers
+        formatted_df = self._format_df_with_interleaved_questions(merged_df, question_map)
+
+        # 7. Auto-approve assignments if requested
         approved_count = 0
-        if auto_approve and not merged_df.empty:
-            # We should only approve assignments that we successfully merged
-            assignments_to_approve = merged_df[merged_df['AssignmentStatus'] == 'Submitted']['AssignmentId'].tolist()
+        if auto_approve and not formatted_df.empty:
+            assignments_to_approve = formatted_df[formatted_df['AssignmentStatus'] == 'Submitted']['AssignmentId'].tolist()
             if assignments_to_approve:
                 print(f"Auto-approving {len(assignments_to_approve)} assignments...")
                 approved_count = self.mturk.approve_assignments(assignments_to_approve)
@@ -1860,7 +1934,7 @@ class QualtricsAndMTurkAutomation:
                 print("No assignments in 'Submitted' status to approve.")
 
         return {
-            "responses": merged_df,
+            "responses": formatted_df,
             "assignments": assignments,
             "approved_count": approved_count
         }
@@ -1875,9 +1949,6 @@ def collect_simulated_data():
     This function encapsulates the logic from run_simulation.py and asks the user for file paths.
     """
     print("\n====== Collect Simulated Data from Existing Survey ======")
-
-    # MODIFIED: Removed redundant and faulty try-except block for imports.
-    # The necessary modules are now imported at the top of the file.
 
     print("\nPlease provide the paths for the simulation files.")
     print("Press Enter to use the default value shown in parentheses.")
@@ -1909,7 +1980,6 @@ def collect_simulated_data():
         with open(survey_context_path, "r") as f:
             survey_context_string = f.read()
 
-        # <<< START OF MODIFICATIONS: Handle different JSON structures >>>
         simulation_context_dict = None
         survey_json = json.loads(survey_context_string)
 
@@ -1925,18 +1995,13 @@ def collect_simulated_data():
             # If neither format is found, raise a clear error.
             raise ValueError("Could not find a 'questions' list. The file must have a top-level 'questions' key, or a 'revised_survey' object containing a 'questions' key.")
 
-        # Now, create a new JSON string that is guaranteed to have the simple structure
-        # that the simulation function expects.
         survey_context_for_simulation = json.dumps(simulation_context_dict)
-        # <<< END OF MODIFICATIONS >>>
-
 
         print("Initializing LLM...")
         llm = openai_llm
 
         # ---- run simulation ----
         print("Running survey simulation...")
-        # MODIFIED: Pass the standardized survey context string to the function
         responses_df = run_all_survey_responses_json(
             llm=llm,
             participant_csv_path=participant_csv_path,
@@ -1961,7 +2026,6 @@ def collect_simulated_data():
         qdf = pd.DataFrame(parsed)
 
         # ---- load question definitions ----
-        # MODIFIED: Use the standardized dictionary we created earlier
         question_defs = simulation_context_dict.get("questions")
         if not question_defs:
             # This is a fallback check; the logic above should have already handled this.
@@ -2280,12 +2344,12 @@ def main():
 # Function to collect data from a previously deployed survey
 def collect_survey_data():
     """
-    Collect data from a completed survey in Qualtrics and MTurk
+    Collects and formats data from a completed survey in Qualtrics and MTurk.
+    The output CSV will contain interleaved questions and answers.
     
     Returns:
-        dict: Collected data including responses and assignment information
+        dict: Collected data including formatted responses and assignment information.
     """
-    # Get survey ID and HIT ID
     survey_id = input("Enter your Qualtrics Survey ID: ")
     hit_id = input("Enter your MTurk HIT ID (leave blank if not using MTurk): ")
 
@@ -2296,53 +2360,61 @@ def collect_survey_data():
     print(f"Ready to collect data for Survey ID: {survey_id}" +
           (f" and HIT ID: {hit_id}" if hit_id else ""))
 
-    # Create automation instance
     automation = QualtricsAndMTurkAutomation()
 
     try:
-        # Collect and process results
+        collected_data = None
         if hit_id:
-            # <<< START OF MODIFICATIONS: Call the newly created method >>>
+            # The collect_and_process_results method now handles question fetching and formatting
             collected_data = automation.collect_and_process_results(
                 survey_id=survey_id,
                 hit_id=hit_id,
                 auto_approve=input("Auto-approve MTurk assignments? (y/n): ").lower() == 'y'
             )
-            # <<< END OF MODIFICATIONS >>>
         else:
-            # Just get Qualtrics data if no HIT ID
+            # Handle Qualtrics-only data collection and formatting
             print("Collecting Qualtrics data only...")
-            responses = automation.qualtrics.get_survey_responses(survey_id)
+            
+            # 1. Get Questions
+            try:
+                question_map = automation.qualtrics.get_survey_questions(survey_id)
+            except Exception as e:
+                print(f"Warning: Could not retrieve survey questions: {e}. Output will not include question text.")
+                question_map = {}
+
+            # 2. Get Responses
+            responses_df = automation.qualtrics.get_survey_responses(survey_id)
+            
+            # 3. Format with interleaved questions and answers
+            final_df = automation._format_df_with_interleaved_questions(responses_df, question_map)
+
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             csv_filename = f"survey_{survey_id}_responses_{timestamp}.csv"
-            # Use utf-8-sig encoding for better compatibility with Excel
-            responses.to_csv(csv_filename, index=False, encoding="utf-8-sig")
-            print(f"\nSaved responses to {csv_filename}")
+            final_df.to_csv(csv_filename, index=False, encoding="utf-8-sig")
+            print(f"\nSaved formatted responses to {csv_filename}")
 
             collected_data = {
-                "responses": responses,
+                "responses": final_df,
                 "csv_filename": csv_filename,
-                "assignments": [], # No MTurk assignments
+                "assignments": [],
                 "approved_count": 0
             }
 
-        # Display response summary
-        # Use .empty for robust checking of pandas DataFrame
-        if 'responses' in collected_data and collected_data['responses'] is not None and not collected_data['responses'].empty:
-            print("\nResponse Preview:")
+        if 'responses' in collected_data and not collected_data['responses'].empty:
+            print("\nFormatted Response Preview:")
             print(collected_data['responses'].head())
 
-            # Save to CSV with a more informative name
-            detailed_csv = f"survey_{survey_id}_detailed_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+            # Save to a final detailed CSV file
+            detailed_csv = f"survey_{survey_id}_detailed_formatted_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
             collected_data['responses'].to_csv(detailed_csv, index=False, encoding="utf-8-sig")
-            print(f"Detailed responses saved to: {detailed_csv}")
+            print(f"Detailed formatted responses also saved to: {detailed_csv}")
         else:
-            print("No responses collected or responses are empty.")
+            print("No responses were collected or the result is empty.")
 
         return collected_data
 
     except Exception as e:
-        print(f"Error collecting data: {str(e)}")
+        print(f"An error occurred while collecting data: {str(e)}")
         import traceback
         traceback.print_exc()
         return None
