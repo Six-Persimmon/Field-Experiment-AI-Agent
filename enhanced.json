@@ -2,85 +2,85 @@
   "original_with_comments": {
     "survey": {
       "theme": "The Theory of Planned Behavior Survey",
-      "purpose": "To assess consumer intentions and attitudes towards purchasing organic food",
+      "purpose": "To understand consumers' attitudes, subjective norms, and perceived behavioral control regarding the purchase of organic food.",
       "questions": [
         {
-          "question_id": "Q1",
+          "question_id": "1",
           "question_text": "I intend to purchase organic food in the next month.",
           "input_type": "multiple_choice",
           "input_config": {
             "options": [
-              "1=Strongly disagree",
+              "1 - Strongly disagree",
               "2",
               "3",
               "4",
               "5",
               "6",
-              "7=Strongly agree"
+              "7 - Strongly agree"
             ]
           }
         },
         {
-          "question_id": "Q2",
+          "question_id": "2",
           "question_text": "Buying organic food is beneficial to my health.",
           "input_type": "multiple_choice",
           "input_config": {
             "options": [
-              "1=Strongly disagree",
+              "1 - Strongly disagree",
               "2",
               "3",
               "4",
               "5",
               "6",
-              "7=Strongly agree"
+              "7 - Strongly agree"
             ]
           }
         },
         {
-          "question_id": "Q3",
+          "question_id": "3",
           "question_text": "I feel confident in my ability to purchase organic food if I want to.",
           "input_type": "multiple_choice",
           "input_config": {
             "options": [
-              "1=Strongly disagree",
+              "1 - Strongly disagree",
               "2",
               "3",
               "4",
               "5",
               "6",
-              "7=Strongly agree"
+              "7 - Strongly agree"
             ]
           }
         },
         {
-          "question_id": "Q4",
+          "question_id": "4",
           "question_text": "People who are important to me think I should purchase organic food.",
           "input_type": "multiple_choice",
           "input_config": {
             "options": [
-              "1=Strongly disagree",
+              "1 - Strongly disagree",
               "2",
               "3",
               "4",
               "5",
               "6",
-              "7=Strongly agree"
+              "7 - Strongly agree"
             ]
           }
         },
         {
-          "question_id": "Q5",
+          "question_id": "5",
           "question_text": "The decision to buy organic food is entirely up to me.",
           "input_type": "multiple_choice",
           "input_config": {
             "options": [
-              "1=Strongly disagree",
+              "1 - Strongly disagree",
               "2",
               "3",
               "4",
               "5",
               "6",
-              "7=Strongly agree"
+              "7 - Strongly agree"
             ]
           }
         }
@@ -88,134 +88,119 @@
     },
     "question_comments": [
       {
-        "question_id": "Q1",
-        "comment": "Clear intention measurement, relevant to the survey's theme."
+        "question_id": "1",
+        "comment": "Directly measures intention but may lack context on reasons."
       },
       {
-        "question_id": "Q2",
-        "comment": "Accurately assesses perceived health benefits."
+        "question_id": "2",
+        "comment": "Requires clarity on what 'beneficial' encompasses."
       },
       {
-        "question_id": "Q3",
-        "comment": "Captures self-efficacy related to buying behaviors."
+        "question_id": "3",
+        "comment": "Good measure of perceived behavioral control, but consider examples."
       },
       {
-        "question_id": "Q4",
-        "comment": "Addresses social influence, an important aspect of TPB."
+        "question_id": "4",
+        "comment": "Considers social influence; ensure respondent understands 'important people'."
       },
       {
-        "question_id": "Q5",
-        "comment": "Assessing perceived behavioral control, aligns well with TPB."
+        "question_id": "5",
+        "comment": "Measures autonomy well but could benefit from rephrasing for clarity."
       }
     ],
-    "overall_comment": "The survey effectively captures key components of the Theory of Planned Behavior; however, minor rephrasing for enhanced clarity could benefit the overall respondent experience."
+    "overall_comment": "The survey adequately captures aspects of the Theory of Planned Behavior but needs refinement for clarity and precision."
   },
   "revised_survey": {
     "theme": "The Theory of Planned Behavior Survey",
-    "purpose": "To assess consumer intentions and attitudes towards purchasing organic food",
+    "purpose": "To understand consumers' attitudes, subjective norms, and perceived behavioral control regarding the purchase of organic food.",
     "questions": [
       {
-        "question_id": "Q1",
-        "question_text": "I plan to purchase organic food within the next month.",
+        "question_id": "1",
+        "question_text": "To what extent do you intend to purchase organic food within the next week?",
         "input_type": "multiple_choice",
         "input_config": {
           "options": [
-            "1=Strongly disagree",
+            "1 - Strongly disagree",
             "2",
             "3",
             "4",
             "5",
             "6",
-            "7=Strongly agree"
+            "7 - Strongly agree"
           ]
         }
       },
       {
-        "question_id": "Q2",
-        "question_text": "I believe that purchasing organic food has health benefits.",
+        "question_id": "2",
+        "question_text": "How beneficial do you believe buying organic food is for your health?",
         "input_type": "multiple_choice",
         "input_config": {
           "options": [
-            "1=Strongly disagree",
+            "1 - Strongly disagree",
             "2",
             "3",
             "4",
             "5",
             "6",
-            "7=Strongly agree"
+            "7 - Strongly agree"
           ]
         }
       },
       {
-        "question_id": "Q3",
-        "question_text": "I am confident in my ability to buy organic food when I choose to.",
+        "question_id": "3",
+        "question_text": "How confident are you in your ability to purchase organic food when you choose to?",
         "input_type": "multiple_choice",
         "input_config": {
           "options": [
-            "1=Strongly disagree",
+            "1 - Strongly disagree",
             "2",
             "3",
             "4",
             "5",
             "6",
-            "7=Strongly agree"
+            "7 - Strongly agree"
           ]
         }
       },
       {
-        "question_id": "Q4",
-        "question_text": "My close friends and family believe that I should purchase organic food.",
+        "question_id": "4",
+        "question_text": "To what extent do you feel that important people in your life believe you should purchase organic food?",
         "input_type": "multiple_choice",
         "input_config": {
           "options": [
-            "1=Strongly disagree",
+            "1 - Strongly disagree",
             "2",
             "3",
             "4",
             "5",
             "6",
-            "7=Strongly agree"
+            "7 - Strongly agree"
           ]
         }
       },
       {
-        "question_id": "Q5",
-        "question_text": "I have complete control over my decision to purchase organic food.",
+        "question_id": "5",
+        "question_text": "Do you feel that the decision to buy organic food is completely within your control?",
         "input_type": "multiple_choice",
         "input_config": {
           "options": [
-            "1=Strongly disagree",
+            "1 - Strongly disagree",
             "2",
             "3",
             "4",
             "5",
             "6",
-            "7=Strongly agree"
+            "7 - Strongly agree"
           ]
         }
       }
     ]
   },
   "explanations": {
-    "question_1": {
-      "change": "Clarified the wording",
-      "reason": "Clear and simple language increases comprehension and ensures that respondents do not face confusion about the satisfaction rating."
-    },
-    "question_2": {
-      "change": "Added a likelihood scale",
-      "reason": "A likelihood scale better captures respondents' intent in recommending the product, allowing for a more nuanced understanding of customer loyalty."
-    },
-    "question_3": {
-      "change": "Changed to 'Select all that apply'",
-      "reason": "This change allows respondents to identify multiple features that they value, ensuring more comprehensive feedback rather than forcing them to choose just one."
-    },
-    "question_4": {
-      "change": "Clarified ease of navigation phrasing",
-      "reason": "Using straightforward language ensures that respondents understand what is being asked regarding their experience with the website."
-    },
-    "question_5": {
-      "change": "Maintained as open-ended for qualitative insights.",
-      "reason": "Retaining this format allows respondents to express detailed and specific suggestions, which can provide better directions for improvements."
-    }
+    "question_1": "Changed the wording to 'How satisfied are you with our product?' from a more generic question to focus specifically on customer satisfaction.",
+    "question_2": "This was maintained as an open-ended question but enhanced to specify 'most valuable' instead of just 'useful' to gather insights about priorities.",
+    "question_3": "Instead of asking for ratings generally, the format has been changed to a matrix question which helps in comparing multiple facets of the product efficiently.",
+    "question_4": "Used a 0-10 scale (Net Promoter Score format) for likelihood to recommend, as it provides more granularity in responses and aligns with common customer satisfaction metrics.",
+    "question_5": "Clarified to request 'improvements' rather than suggestions which could be too broad, allowing for focused feedback on product development."
   }
 }

@@ -1,0 +1,102 @@
+[
+  {
+    "Question": "To what extent do you intend to purchase organic food within the next week? Choices: 1-1 - Strongly disagree, 2-2, 3-3, 4-4, 5-5, 6-6, 7-7 - Strongly agree",
+    "num_llms": 6,
+    "llm_resp": [
+      5,
+      5,
+      5,
+      5,
+      5,
+      5
+    ],
+    "debiased_llm_resp": [
+      5.108534700155147,
+      5.108534700155147,
+      5.108534700155147,
+      5.108534700155147,
+      5.108534700155147,
+      5.108534700155147
+    ]
+  },
+  {
+    "Question": "How beneficial do you believe buying organic food is for your health? Choices: 1-1 - Strongly disagree, 2-2, 3-3, 4-4, 5-5, 6-6, 7-7 - Strongly agree",
+    "num_llms": 6,
+    "llm_resp": [
+      6,
+      6,
+      6,
+      6,
+      6,
+      6
+    ],
+    "debiased_llm_resp": [
+      6.054535639784398,
+      6.054535639784398,
+      6.054535639784398,
+      6.054535639784398,
+      6.054535639784398,
+      6.054535639784398
+    ]
+  },
+  {
+    "Question": "How confident are you in your ability to purchase organic food when you choose to? Choices: 1-1 - Strongly disagree, 2-2, 3-3, 4-4, 5-5, 6-6, 7-7 - Strongly agree",
+    "num_llms": 6,
+    "llm_resp": [
+      4,
+      4,
+      4,
+      4,
+      4,
+      4
+    ],
+    "debiased_llm_resp": [
+      4.176634343679509,
+      4.176634343679509,
+      4.176634343679509,
+      4.176634343679509,
+      4.176634343679509,
+      4.176634343679509
+    ]
+  },
+  {
+    "Question": "To what extent do you feel that important people in your life believe you should purchase organic food? Choices: 1-1 - Strongly disagree, 2-2, 3-3, 4-4, 5-5, 6-6, 7-7 - Strongly agree",
+    "num_llms": 6,
+    "llm_resp": [
+      3,
+      3,
+      3,
+      3,
+      3,
+      3
+    ],
+    "debiased_llm_resp": [
+      3.337134123448467,
+      3.337134123448467,
+      3.337134123448467,
+      3.337134123448467,
+      3.337134123448467,
+      3.337134123448467
+    ]
+  },
+  {
+    "Question": "Do you feel that the decision to buy organic food is completely within your control? Choices: 1-1 - Strongly disagree, 2-2, 3-3, 4-4, 5-5, 6-6, 7-7 - Strongly agree",
+    "num_llms": 6,
+    "llm_resp": [
+      4,
+      5,
+      4,
+      5,
+      4,
+      5
+    ],
+    "debiased_llm_resp": [
+      4.185137733927676,
+      5.185137733927676,
+      4.185137733927676,
+      5.185137733927676,
+      4.185137733927676,
+      5.185137733927676
+    ]
+  }
+]
