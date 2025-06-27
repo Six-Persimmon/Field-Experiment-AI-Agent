@@ -1,61 +1,61 @@
 [
   {
-    "Question": "How likely are you to purchase organic food in the upcoming week? Choices: 1-1=Very unlikely, 2-2, 3-3, 4-4, 5-5, 6-6, 7-7=Very likely",
+    "Question": "I plan to purchase organic food within the next week. Choices: 1-1=Strongly disagree, 2-2, 3-3, 4-4, 5-5, 6-6, 7-7=Strongly agree",
     "num_llms": 6,
     "llm_resp": [
       4,
-      5,
-      5,
       4,
       5,
-      5
-    ]
-  },
-  {
-    "Question": "To what extent do you believe that buying organic food contributes positively to your health? Choices: 1-1=Not at all, 2-2, 3-3, 4-4, 5-5, 6-6, 7-7=Very much",
-    "num_llms": 6,
-    "llm_resp": [
-      6,
-      6,
-      6,
-      5,
-      6,
-      6
-    ]
-  },
-  {
-    "Question": "How confident do you feel about your ability to purchase organic food when you choose to do so? Choices: 1-1=Not confident at all, 2-2, 3-3, 4-4, 5-5, 6-6, 7-7=Very confident",
-    "num_llms": 6,
-    "llm_resp": [
-      5,
       4,
-      4,
-      6,
       4,
       4
     ]
   },
   {
-    "Question": "How much do you agree that people close to you believe you should purchase organic food? Choices: 1-1=Strongly disagree, 2-2, 3-3, 4-4, 5-5, 6-6, 7-7=Strongly agree",
+    "Question": "I believe that purchasing organic food is beneficial for my health. Choices: 1-1=Strongly disagree, 2-2, 3-3, 4-4, 5-5, 6-6, 7-7=Strongly agree",
     "num_llms": 6,
     "llm_resp": [
-      4,
-      3,
+      6,
       5,
-      4,
+      6,
       5,
+      5,
+      6
+    ]
+  },
+  {
+    "Question": "I am confident in my ability to purchase organic food when I choose to. Choices: 1-1=Strongly disagree, 2-2, 3-3, 4-4, 5-5, 6-6, 7-7=Strongly agree",
+    "num_llms": 6,
+    "llm_resp": [
+      5,
+      6,
+      4,
+      6,
+      6,
       5
     ]
   },
   {
-    "Question": "Do you consider the decision to buy organic food primarily as your personal choice? Choices: 1-1=Strongly disagree, 2-2, 3-3, 4-4, 5-5, 6-6, 7-7=Strongly agree",
+    "Question": "I think that people who are important to me believe I should purchase organic food. Choices: 1-1=Strongly disagree, 2-2, 3-3, 4-4, 5-5, 6-6, 7-7=Strongly agree",
+    "num_llms": 6,
+    "llm_resp": [
+      3,
+      3,
+      3,
+      3,
+      3,
+      4
+    ]
+  },
+  {
+    "Question": "I feel that the choice to buy organic food is completely up to me. Choices: 1-1=Strongly disagree, 2-2, 3-3, 4-4, 5-5, 6-6, 7-7=Strongly agree",
     "num_llms": 6,
     "llm_resp": [
       6,
       5,
       6,
       6,
-      6,
+      5,
       6
     ]
   }

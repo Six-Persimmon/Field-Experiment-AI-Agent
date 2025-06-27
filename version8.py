@@ -2280,11 +2280,11 @@ def generate_research_paper():
         verbose=True
     )
 
-    print("\n🚀 Kicking off the Research Paper Generation Crew... This may take several minutes.")
+    print("\n Kicking off the Research Paper Generation Crew... This may take several minutes.")
     result = paper_crew.kickoff()
 
     # 7. Final Output
-    print("\n\n✅ Crew finished the task! Here is the final research paper:")
+    print("\n\n Crew finished the task! Here is the final research paper:")
     print("="*80)
     print(result)
     print("="*80)
@@ -2294,7 +2294,7 @@ def generate_research_paper():
     output_filename = f"research_paper_{timestamp}.md"
     with open(output_filename, 'w', encoding='utf-8') as f:
         f.write(result.raw)
-    print(f"\n📄 Research paper has been saved to '{output_filename}'")
+    print(f"\n Research paper has been saved to '{output_filename}'")
 
 
 def main():
