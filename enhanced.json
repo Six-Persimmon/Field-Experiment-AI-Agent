@@ -2,7 +2,7 @@
   "original_with_comments": {
     "survey": {
       "theme": "The Theory of Planned Behavior Survey",
-      "purpose": "To understand consumers' attitudes, subjective norms, and perceived behavioral control regarding the purchase of organic food.",
+      "purpose": "To assess factors influencing intentions to purchase organic food.",
       "questions": [
         {
           "question_id": "1",
@@ -10,13 +10,13 @@
           "input_type": "multiple_choice",
           "input_config": {
             "options": [
-              "1 - Strongly disagree",
+              "1=Strongly disagree",
               "2",
               "3",
               "4",
               "5",
               "6",
-              "7 - Strongly agree"
+              "7=Strongly agree"
             ]
           }
         },
@@ -26,13 +26,13 @@
           "input_type": "multiple_choice",
           "input_config": {
             "options": [
-              "1 - Strongly disagree",
+              "1=Strongly disagree",
               "2",
               "3",
               "4",
               "5",
               "6",
-              "7 - Strongly agree"
+              "7=Strongly agree"
             ]
           }
         },
@@ -42,13 +42,13 @@
           "input_type": "multiple_choice",
           "input_config": {
             "options": [
-              "1 - Strongly disagree",
+              "1=Strongly disagree",
               "2",
               "3",
               "4",
               "5",
               "6",
-              "7 - Strongly agree"
+              "7=Strongly agree"
             ]
           }
         },
@@ -58,13 +58,13 @@
           "input_type": "multiple_choice",
           "input_config": {
             "options": [
-              "1 - Strongly disagree",
+              "1=Strongly disagree",
               "2",
               "3",
               "4",
               "5",
               "6",
-              "7 - Strongly agree"
+              "7=Strongly agree"
             ]
           }
         },
@@ -74,13 +74,13 @@
           "input_type": "multiple_choice",
           "input_config": {
             "options": [
-              "1 - Strongly disagree",
+              "1=Strongly disagree",
               "2",
               "3",
               "4",
               "5",
               "6",
-              "7 - Strongly agree"
+              "7=Strongly agree"
             ]
           }
         }
@@ -89,118 +89,118 @@
     "question_comments": [
       {
         "question_id": "1",
-        "comment": "Directly measures intention but may lack context on reasons."
+        "comment": "Consider rephrasing for clarity about timeframe."
       },
       {
         "question_id": "2",
-        "comment": "Requires clarity on what 'beneficial' encompasses."
+        "comment": "The statement could be more specific on health benefits."
       },
       {
         "question_id": "3",
-        "comment": "Good measure of perceived behavioral control, but consider examples."
+        "comment": "Perhaps include examples of perceived control factors."
       },
       {
         "question_id": "4",
-        "comment": "Considers social influence; ensure respondent understands 'important people'."
+        "comment": "Ensure this captures a wide range of social influences."
       },
       {
         "question_id": "5",
-        "comment": "Measures autonomy well but could benefit from rephrasing for clarity."
+        "comment": "Clarify the meaning of \"entirely up to me\" to avoid ambiguity."
       }
     ],
-    "overall_comment": "The survey adequately captures aspects of the Theory of Planned Behavior but needs refinement for clarity and precision."
+    "overall_comment": "The survey has a solid foundation but could benefit from more precise language and context in some questions."
   },
   "revised_survey": {
     "theme": "The Theory of Planned Behavior Survey",
-    "purpose": "To understand consumers' attitudes, subjective norms, and perceived behavioral control regarding the purchase of organic food.",
+    "purpose": "To assess factors influencing intentions to purchase organic food.",
     "questions": [
       {
         "question_id": "1",
-        "question_text": "To what extent do you intend to purchase organic food within the next week?",
+        "question_text": "How likely are you to purchase organic food in the upcoming week?",
         "input_type": "multiple_choice",
         "input_config": {
           "options": [
-            "1 - Strongly disagree",
+            "1=Very unlikely",
             "2",
             "3",
             "4",
             "5",
             "6",
-            "7 - Strongly agree"
+            "7=Very likely"
           ]
         }
       },
       {
         "question_id": "2",
-        "question_text": "How beneficial do you believe buying organic food is for your health?",
+        "question_text": "To what extent do you believe that buying organic food contributes positively to your health?",
         "input_type": "multiple_choice",
         "input_config": {
           "options": [
-            "1 - Strongly disagree",
+            "1=Not at all",
             "2",
             "3",
             "4",
             "5",
             "6",
-            "7 - Strongly agree"
+            "7=Very much"
           ]
         }
       },
       {
         "question_id": "3",
-        "question_text": "How confident are you in your ability to purchase organic food when you choose to?",
+        "question_text": "How confident do you feel about your ability to purchase organic food when you choose to do so?",
         "input_type": "multiple_choice",
         "input_config": {
           "options": [
-            "1 - Strongly disagree",
+            "1=Not confident at all",
             "2",
             "3",
             "4",
             "5",
             "6",
-            "7 - Strongly agree"
+            "7=Very confident"
           ]
         }
       },
       {
         "question_id": "4",
-        "question_text": "To what extent do you feel that important people in your life believe you should purchase organic food?",
+        "question_text": "How much do you agree that people close to you believe you should purchase organic food?",
         "input_type": "multiple_choice",
         "input_config": {
           "options": [
-            "1 - Strongly disagree",
+            "1=Strongly disagree",
             "2",
             "3",
             "4",
             "5",
             "6",
-            "7 - Strongly agree"
+            "7=Strongly agree"
           ]
         }
       },
       {
         "question_id": "5",
-        "question_text": "Do you feel that the decision to buy organic food is completely within your control?",
+        "question_text": "Do you consider the decision to buy organic food primarily as your personal choice?",
         "input_type": "multiple_choice",
         "input_config": {
           "options": [
-            "1 - Strongly disagree",
+            "1=Strongly disagree",
             "2",
             "3",
             "4",
             "5",
             "6",
-            "7 - Strongly agree"
+            "7=Strongly agree"
           ]
         }
       }
     ]
   },
   "explanations": {
-    "question_1": "Changed the wording to 'How satisfied are you with our product?' from a more generic question to focus specifically on customer satisfaction.",
-    "question_2": "This was maintained as an open-ended question but enhanced to specify 'most valuable' instead of just 'useful' to gather insights about priorities.",
-    "question_3": "Instead of asking for ratings generally, the format has been changed to a matrix question which helps in comparing multiple facets of the product efficiently.",
-    "question_4": "Used a 0-10 scale (Net Promoter Score format) for likelihood to recommend, as it provides more granularity in responses and aligns with common customer satisfaction metrics.",
-    "question_5": "Clarified to request 'improvements' rather than suggestions which could be too broad, allowing for focused feedback on product development."
+    "1": "For the satisfaction question, a Likert scale provides a clearer view of customer sentiment rather than vague \u2018satisfied\u2019 options.",
+    "2": "Allowing multiple selections offers insights into diverse preferences that single-answer questions cannot.",
+    "3": "Implementing a scale from 1 to 10 allows for more differentiated feedback and gives nuanced data for customer loyalty insights.",
+    "4": "Open-ended questions yield richer qualitative data, which is essential for understanding deeper customer insights.",
+    "5": "Clarifying the reason for purchase helps to focus responses and better understand consumer behavior."
   }
 }

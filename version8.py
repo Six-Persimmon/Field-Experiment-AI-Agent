@@ -1886,7 +1886,7 @@ def collect_simulated_data():
     template_path = input(f"Enter the path for the survey response template (default: {default_template_path}): ") or default_template_path
 
     default_survey_context_path = "simulate_response/test_survey.json"
-    survey_context_path = input(f"Enter the path for the survey context JSON file (default: {default_survey_context_path}): ") or default_survey_context_path
+    survey_context_path = input(f"Enter the path for the survey content JSON file (default: {default_survey_context_path}): ") or default_survey_context_path
 
     default_participant_csv_path = "simulate_response/participant_pool.csv"
     participant_csv_path = input(f"Enter the path for the participant pool CSV file (default: {default_participant_csv_path}): ") or default_participant_csv_path
@@ -2032,7 +2032,7 @@ def generate_research_paper():
     print("\n====== Generate Research Paper from CSV Data ======")
 
     # 1. Get CSV file path from user
-    csv_path = input("Enter the full path to your CSV data file: ")
+    csv_path = input("Enter the path to your CSV data file: ")
     if not os.path.exists(csv_path):
         print(f"Error: File not found at '{csv_path}'. Please check the path and try again.")
         return

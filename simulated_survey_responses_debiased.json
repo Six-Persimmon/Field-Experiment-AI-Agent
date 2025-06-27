@@ -1,46 +1,6 @@
 [
   {
-    "Question": "To what extent do you intend to purchase organic food within the next week? Choices: 1-1 - Strongly disagree, 2-2, 3-3, 4-4, 5-5, 6-6, 7-7 - Strongly agree",
-    "num_llms": 6,
-    "llm_resp": [
-      5,
-      5,
-      5,
-      5,
-      5,
-      5
-    ],
-    "debiased_llm_resp": [
-      5.108534700155147,
-      5.108534700155147,
-      5.108534700155147,
-      5.108534700155147,
-      5.108534700155147,
-      5.108534700155147
-    ]
-  },
-  {
-    "Question": "How beneficial do you believe buying organic food is for your health? Choices: 1-1 - Strongly disagree, 2-2, 3-3, 4-4, 5-5, 6-6, 7-7 - Strongly agree",
-    "num_llms": 6,
-    "llm_resp": [
-      6,
-      6,
-      6,
-      6,
-      6,
-      6
-    ],
-    "debiased_llm_resp": [
-      6.054535639784398,
-      6.054535639784398,
-      6.054535639784398,
-      6.054535639784398,
-      6.054535639784398,
-      6.054535639784398
-    ]
-  },
-  {
-    "Question": "How confident are you in your ability to purchase organic food when you choose to? Choices: 1-1 - Strongly disagree, 2-2, 3-3, 4-4, 5-5, 6-6, 7-7 - Strongly agree",
+    "Question": "How likely are you to purchase organic food in the upcoming week? Choices: 1-1=Very unlikely, 2-2, 3-3, 4-4, 5-5, 6-6, 7-7=Very likely",
     "num_llms": 6,
     "llm_resp": [
       4,
@@ -51,52 +11,92 @@
       4
     ],
     "debiased_llm_resp": [
-      4.176634343679509,
-      4.176634343679509,
-      4.176634343679509,
-      4.176634343679509,
-      4.176634343679509,
-      4.176634343679509
+      3.9039054235650474,
+      3.9039054235650474,
+      3.9039054235650474,
+      3.9039054235650474,
+      3.9039054235650474,
+      3.9039054235650474
     ]
   },
   {
-    "Question": "To what extent do you feel that important people in your life believe you should purchase organic food? Choices: 1-1 - Strongly disagree, 2-2, 3-3, 4-4, 5-5, 6-6, 7-7 - Strongly agree",
+    "Question": "To what extent do you believe that buying organic food contributes positively to your health? Choices: 1-1=Not at all, 2-2, 3-3, 4-4, 5-5, 6-6, 7-7=Very much",
     "num_llms": 6,
     "llm_resp": [
-      3,
-      3,
-      3,
-      3,
-      3,
-      3
-    ],
-    "debiased_llm_resp": [
-      3.337134123448467,
-      3.337134123448467,
-      3.337134123448467,
-      3.337134123448467,
-      3.337134123448467,
-      3.337134123448467
-    ]
-  },
-  {
-    "Question": "Do you feel that the decision to buy organic food is completely within your control? Choices: 1-1 - Strongly disagree, 2-2, 3-3, 4-4, 5-5, 6-6, 7-7 - Strongly agree",
-    "num_llms": 6,
-    "llm_resp": [
-      4,
+      6,
       5,
-      4,
+      6,
       5,
-      4,
+      5,
       5
     ],
     "debiased_llm_resp": [
-      4.185137733927676,
-      5.185137733927676,
-      4.185137733927676,
-      5.185137733927676,
-      4.185137733927676,
-      5.185137733927676
+      6.203698469058443,
+      5.203698469058443,
+      6.203698469058443,
+      5.203698469058443,
+      5.203698469058443,
+      5.203698469058443
+    ]
+  },
+  {
+    "Question": "How confident do you feel about your ability to purchase organic food when you choose to do so? Choices: 1-1=Not confident at all, 2-2, 3-3, 4-4, 5-5, 6-6, 7-7=Very confident",
+    "num_llms": 6,
+    "llm_resp": [
+      5,
+      6,
+      5,
+      6,
+      6,
+      6
+    ],
+    "debiased_llm_resp": [
+      5.349696906583179,
+      6.349696906583179,
+      5.349696906583179,
+      6.349696906583179,
+      6.349696906583179,
+      6.349696906583179
+    ]
+  },
+  {
+    "Question": "How much do you agree that people close to you believe you should purchase organic food? Choices: 1-1=Strongly disagree, 2-2, 3-3, 4-4, 5-5, 6-6, 7-7=Strongly agree",
+    "num_llms": 6,
+    "llm_resp": [
+      4,
+      4,
+      3,
+      4,
+      5,
+      4
+    ],
+    "debiased_llm_resp": [
+      4.25759696261325,
+      4.25759696261325,
+      3.25759696261325,
+      4.25759696261325,
+      5.25759696261325,
+      4.25759696261325
+    ]
+  },
+  {
+    "Question": "Do you consider the decision to buy organic food primarily as your personal choice? Choices: 1-1=Strongly disagree, 2-2, 3-3, 4-4, 5-5, 6-6, 7-7=Strongly agree",
+    "num_llms": 6,
+    "llm_resp": [
+      5,
+      6,
+      4,
+      6,
+      6,
+      6
+    ],
+    "debiased_llm_resp": [
+      5.109172691705601,
+      6.109172691705601,
+      4.109172691705601,
+      6.109172691705601,
+      6.109172691705601,
+      6.109172691705601
     ]
   }
 ]
