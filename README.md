@@ -27,7 +27,7 @@ The system uses Pydantic models, CrewAI agents, OpenAI, Qualtrics API, and MTurk
 
 ---
 
-## ⚙️ Prerequisites
+## Prerequisites
 
 * **Python 3.8+**
 * A Qualtrics account with API token & data center information
@@ -36,7 +36,7 @@ The system uses Pydantic models, CrewAI agents, OpenAI, Qualtrics API, and MTurk
 
 ---
 
-## 📥 Installation
+## Installation
 
 1. **Clone the repository**
 
@@ -76,7 +76,7 @@ The system uses Pydantic models, CrewAI agents, OpenAI, Qualtrics API, and MTurk
 
 ---
 
-## 📂 Key Directories & Files
+## Key Directories & Files
 
 ```plaintext
 config/                        # YAML configs for agents and tasks
@@ -102,14 +102,14 @@ README.md                      # Project overview and instructions
 
 ---
 
-## 📝 Configuration Files
+## Configuration Files
 
 * **`config/agents/*.yaml`**: Defines roles and goals for each AI agent.
 * **`config/tasks/*.yaml`**: Describes tasks for CrewAI (survey conversion, research, improvement).
 
 ---
 
-## 🚀 Usage
+## Usage
 
 Run the main menu for interactive workflows:
 
@@ -148,7 +148,7 @@ python version8.py
 
 ---
 
-## 📁 Input File Formats
+## Input File Formats
 
 * **Raw survey text**: Must include:
 
