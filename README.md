@@ -23,7 +23,7 @@ This project provides an interactive, AI-powered survey enhancement and deployme
 * Collect both human and simulated survey responses
 * Generate research papers from CSV data
 
-The system leverages Pydantic models, CrewAI agents, OpenAI, Qualtrics API, and MTurk API, offering a seamless end-to-end workflow for academic and market research.
+The system uses Pydantic models, CrewAI agents, OpenAI, Qualtrics API, and MTurk API, offering a seamless end-to-end workflow for academic and market research.
 
 ---
 
