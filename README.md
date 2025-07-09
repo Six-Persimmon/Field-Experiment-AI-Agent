@@ -29,50 +29,10 @@ The system uses Pydantic models, CrewAI agents, OpenAI, Qualtrics API, and MTurk
 
 ## Prerequisites
 
-* **Python 3.8+**
+* **Python 3.12+**
 * A Qualtrics account with API token & data center information
-* AWS credentials (if using MTurk) in `.env`
-* Internet connection for API calls
-
----
-
-## Installation
-
-1. **Clone the repository**
-
-   ```bash
-   git clone <repo-url>
-   cd <repo-directory>
-   ```
-
-2. **Create & activate a virtual environment**
-
-   ```bash
-   python -m venv venv
-   source venv/bin/activate   # macOS/Linux
-   venv\Scripts\activate    # Windows
-   ```
-
-3. **Install dependencies**
-
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-4. **Environment variables**
-   Create a `.env` file in the project root:
-
-   ```ini
-   # Qualtrics
-   QUALTRICS_API_TOKEN=your_token_here
-   QUALTRICS_DATA_CENTER=your_datacenter_id
-   QUALTRICS_DIRECTORY_ID=your_directory_id
-
-   # AWS (MTurk)
-   AWS_ACCESS_KEY_ID=your_access_key
-   AWS_SECRET_ACCESS_KEY=your_secret_key
-   AWS_REGION=us-east-1
-   ```
+* AWS credentials (if using MTurk) 
+* Claude and OpenAI API accounts
 
 ---
 
@@ -100,57 +60,62 @@ survey_SV_6nkUCABm1WWeUiq_detailed_formatted.csv # Formatted survey responses
 README.md                      # Project overview and instructions
 ```
 
----
-
-## Configuration Files
+**Configuration Files:**
 
 * **`config/agents/*.yaml`**: Defines roles and goals for each AI agent.
 * **`config/tasks/*.yaml`**: Describes tasks for CrewAI (survey conversion, research, improvement).
 
----
-
-## Usage
-
-Run the main menu for interactive workflows:
-
-```bash
-python version8.py
-```
-
-### Menu Options
-
-1. **Create and enhance a new survey**
-
-   * Prompt: Enter raw survey text (must include `Topic:` and at least one `Questions:` line).
-   * Result: Enhanced JSON, summary printed, and interactive enhancement menu.
-
-2. **Collect human data from existing survey**
-
-   * Input: Qualtrics Survey ID and optional MTurk HIT ID.
-   * Output: Formatted CSV with interleaved questions and responses.
-
-3. **Collect simulated data from existing survey**
-
-   * Prompt for paths to:
-
-     * `survey_response_template.txt` (LLM template)
-     * `test_survey.json` (survey context)
-     * `participant_pool.csv` (participant metadata)
-   * Output: JSON + CSV of simulated responses; optional debiasing.
-
-4. **Generate research paper from CSV data**
-
-   * Input: Path to CSV file.
-   * Optional: Provide a research hypothesis.
-   * Output: Markdown-formatted paper and saved `.md` file.
-
-5. **Exit**
 
 ---
+
+## Installation
+
+1. **Clone the repository**
+
+   ```bash
+   git clone https://github.com/Six-Persimmon/Field-Experiment-AI-Agent.git
+   cd Field-Experiment-AI-Agent
+   ```
+
+2. **Create & activate a virtual environment**
+
+   ```bash
+   conda create -n venv python=3.12
+   conda activate venv
+   ```
+
+3. **Install dependencies**
+
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. **Environment variables**
+   Create a `.env` file in the root folder:
+
+   ```ini
+   # Qualtrics
+   QUALTRICS_API_TOKEN=your_token_here
+   QUALTRICS_DATA_CENTER=your_datacenter_id
+   QUALTRICS_DIRECTORY_ID=your_directory_id
+
+   # AWS (MTurk)
+   AWS_ACCESS_KEY_ID=your_access_key
+   AWS_SECRET_ACCESS_KEY=your_secret_key
+   AWS_REGION=us-east-1
+   MTURK_SANDBOX=True  # Set to True if you want to run a simulation; Set to False if you want to run a real experiment 
+
+   #LLM Models
+   OPENAI_API_KEY=your_openai_key
+   ANTHROPIC_API_KEY=your_claude_key
+   ```
+
+---
+
 
 ## Input File Formats
 
-* **Raw survey text**: Must include:
+* **Copy and Pasting Your Original Survey Text**: Must include:
 
   ```text
   Topic: Your Survey Topic
@@ -162,11 +127,51 @@ python version8.py
 
 * **Simulation**:
 
-  * `survey_response_template.txt`: A prompt template for generating responses.
-  * `test_survey.json`: Survey JSON with top-level `questions` or nested under `revised_survey`.
-  * `participant_pool.csv`: CSV with participant metadata.
+  * `participant_pool.csv`: CSV with simulated participant metadata. Eg:
+  ```ParticipantID,Race,Gender,Age```
+  * `test_survey.json`: Can be a default survey in JSON format or your newly created survey (please ensure that you save it as a JSON file)
+  * `survey_response_template.txt`: A prompt template telling the LLM model to roleplay the specific demographics found in  `participant_pool.csv` for generating responses.
 
-* **CSV for paper generation**: Any tabular data; first row is header.
+* **CSV for paper generation**: Any tabular data as long as it is in `.csv` file format; first row is the header.
 
 ---
 
+
+## Terminal Usage
+
+Run the following command in your terminal:
+
+```bash
+python version8.py
+```
+
+### Menu Options
+
+1. **Create and enhance a new survey**
+
+   * Prompt: Enter raw survey text (must include `Topic:` and at least one `Questions:` line).
+   * Result: Creates a survey in JSON format, allows AI and human enhancements, and deployable to Qualtrics and MTurk.
+
+2. **Collect human data from existing survey**
+
+   * Input: Qualtrics Survey ID and optional MTurk HIT ID.
+   * Output: Formatted CSV with questions and responses.
+
+3. **Collect simulated data from existing survey**
+
+   * Input relative file paths to:
+
+     * `survey_response_template.txt` (LLM template)
+     * `test_survey.json` (survey content)
+     * `participant_pool.csv` (participant metadata)
+   * Output: JSON + CSV of simulated responses; optional debiasing.
+
+4. **Generate research paper from CSV data**
+
+   * Input: Path to CSV file.
+   * Optional: Provide a research hypothesis.
+   * Output: Markdown-formatted paper saved as `.md` file.
+
+5. **Exit**
+
+---
