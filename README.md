@@ -50,13 +50,11 @@ test_survey/                   # Sample survey JSON files
 **Key files:**
 
 ```plaintext
-version8.py                    # Final production code entry point
+survey.py                      # Final production code entry point
+survey.html                    # Final HTML product
+server.py                      # Backend server to run API calls
+survey_logic.py                # Necessary logic from survey.py used for backend calls
 requirements.txt               # Python dependencies list
-enhanced.json                  # Latest enhanced survey output
-research_paper_20250627_222338.md  # Generated research paper
-simulated_survey_responses.json     # Raw simulation output
-simulated_survey_responses_debiased.csv # Debiased simulation results
-survey_SV_6nkUCABm1WWeUiq_detailed_formatted.csv # Formatted survey responses
 README.md                      # Project overview and instructions
 ```
 
@@ -90,10 +88,15 @@ README.md                      # Project overview and instructions
    pip install -r requirements.txt
    ```
 
-4. **Environment variables**
+---
+
+# Terminal Usage
+
+## API Keys
+
    Create a `.env` file in the root folder:
 
-   ```ini
+   ```
    # Qualtrics
    QUALTRICS_API_TOKEN=your_token_here
    QUALTRICS_DATA_CENTER=your_datacenter_id
@@ -110,10 +113,15 @@ README.md                      # Project overview and instructions
    ANTHROPIC_API_KEY=your_claude_key
    ```
 
----
+## Running the Code
 
+Run the following command in your terminal:
 
-## Input File Formats
+```bash
+python survey.py
+```
+
+### Input File Formats
 
 * **Copy and Pasting Your Original Survey Text**: Must include:
 
@@ -133,17 +141,6 @@ README.md                      # Project overview and instructions
   * `survey_response_template.txt`: A prompt template telling the LLM model to roleplay the specific demographics found in  `participant_pool.csv` for generating responses.
 
 * **CSV for paper generation**: Any tabular data as long as it is in `.csv` file format; first row is the header.
-
----
-
-
-## Terminal Usage
-
-Run the following command in your terminal:
-
-```bash
-python version8.py
-```
 
 ### Menu Options
 
@@ -175,3 +172,95 @@ python version8.py
 5. **Exit**
 
 ---
+
+# HTML Usage
+
+## Running the Website
+
+1. Run the following command in your terminal:
+
+```bash
+python server.py
+```
+
+2. You should see something of the following:
+```
+ * Serving Flask app 'server'
+ * Debug mode: on
+2025-07-11 20:09:13,297 - werkzeug - INFO - WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on http://{...}:5001
+```
+
+Please click the last link that says "Running on ..."
+
+3. Now, the website will have opened up on your default browser for your usage.
+
+### API Keys
+
+   Enter the following information onto the website when prompted:
+
+   ```
+   # Qualtrics
+   QUALTRICS_API_TOKEN=your_token_here
+   QUALTRICS_DATA_CENTER=your_datacenter_id
+   QUALTRICS_DIRECTORY_ID=your_directory_id
+
+   # AWS (MTurk)
+   AWS_ACCESS_KEY_ID=your_access_key
+   AWS_SECRET_ACCESS_KEY=your_secret_key
+   AWS_REGION=us-east-1
+   MTURK_SANDBOX=True  # Set to True if you want to run a simulation; Set to False if you want to run a real experiment 
+
+   #LLM Models
+   OPENAI_API_KEY=your_openai_key
+   ANTHROPIC_API_KEY=your_claude_key
+   ```
+
+### Input File Formats
+
+* **Copy and Pasting Your Original Survey Text**: Must include:
+
+  ```text
+  Topic: Your Survey Topic
+  Purpose: Brief description
+  Questions:
+    - QID1: First question text...
+    - QID2: Second question text...
+  ```
+
+* **Simulation**:
+
+  * `participant_pool.csv`: CSV with simulated participant metadata. Eg:
+  ```ParticipantID,Race,Gender,Age```
+  * `test_survey.json`: Can be a default survey in JSON format or your newly created survey (please ensure that you save it as a JSON file)
+  * `survey_response_template.txt`: A prompt template telling the LLM model to roleplay the specific demographics found in  `participant_pool.csv` for generating responses.
+
+* **CSV for paper generation**: Any tabular data as long as it is in `.csv` file format; first row is the header.
+
+### Menu Options
+
+1. **Create and enhance a new survey**
+
+   * Prompt: Enter raw survey text (must include `Topic:` and at least one `Questions:` line).
+   * Result: Creates a survey in JSON format, allows AI and human enhancements, and deployable to Qualtrics and MTurk.
+
+2. **Collect human data from existing survey**
+
+   * Input: Qualtrics Survey ID and optional MTurk HIT ID.
+   * Output: Formatted CSV with questions and responses.
+
+3. **Collect simulated data from existing survey**
+
+   * Input relative file paths to:
+
+     * `survey_response_template.txt` (LLM template)
+     * `test_survey.json` (survey content)
+     * `participant_pool.csv` (participant metadata)
+   * Output: JSON + CSV of simulated responses; optional debiasing.
+
+4. **Generate research paper from CSV data**
+
+   * Input: Path to CSV file.
+   * Optional: Provide a research hypothesis.
+   * Output: Markdown-formatted paper saved as `.md` file.
+

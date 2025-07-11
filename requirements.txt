@@ -18,3 +18,9 @@ scipy
 pyyaml
 openpyxl
 anthropic
+flask
+flask-cors
+urllib3
+certifi
+zipfile36
+lxml
