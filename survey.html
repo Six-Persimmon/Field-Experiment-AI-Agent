@@ -194,17 +194,44 @@
         </div>
 
         <div id="collectSimulatedDataView" class="view">
-            <button class="back-to-menu-btn mb-6 bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300"><i class="fas fa-arrow-left mr-2"></i>Back to Menu</button>
+            <button class="back-to-menu-btn …">← Back to Menu</button>
             <div class="bg-white p-8 rounded-xl shadow-lg">
-                <h2 class="text-2xl font-semibold mb-4">1. Configure Simulation</h2>
-                <p class="text-gray-500 mb-4">Provide the content for the simulation files below.</p>
-                <div class="space-y-4">
-                    <textarea id="simTemplate" class="w-full h-24 p-2 border rounded-md" placeholder="Paste survey_response_template.txt content here..."></textarea>
-                    <textarea id="simSurveyContext" class="w-full h-32 p-2 border rounded-md" placeholder="Paste test_survey.json content here..."></textarea>
-                    <textarea id="simParticipants" class="w-full h-32 p-2 border rounded-md" placeholder="Paste participant_pool.csv content here..."></textarea>
-                </div>
-                <button id="runSimulationBtn" class="mt-4 w-full bg-purple-600 text-white font-semibold py-3 rounded-lg hover:bg-purple-700">Run Simulation</button>
+              <h2 class="text-2xl font-semibold mb-4">1. Configure Simulation</h2>
+              <p class="text-gray-500 mb-4">Provide the content for the simulation files below.</p>
+              <div class="space-y-6">
                 
+                <!-- 1. Survey Response Template -->
+                <div>
+                  <h4 class="text-lg font-medium mb-2">Survey Response Template</h4>
+                  <textarea id="simTemplate"
+                            class="w-full h-24 p-2 border rounded-md text-gray-500"
+                            oninput="this.classList.remove('text-gray-500')">You are a $age-year-old $gender identifying as $race. Please answer the following survey. Please answer the questions by returning ONLY json style answers.</textarea>
+                </div>
+                
+                <!-- 2. Survey JSON Context -->
+                <div>
+                  <h4 class="text-lg font-medium mb-2">Survey JSON Context</h4>
+                  <textarea id="simSurveyContext"
+                            class="w-full h-24 p-2 border rounded-md text-gray-500"
+                            oninput="this.classList.remove('text-gray-500')">{"theme":"The Theory of Planned Behavior Survey","purpose":"To assess consumer intentions and beliefs regarding the purchase of organic food.","questions":[{"question_id":"q1","question_text":"I intend to purchase organic food in the next month.","input_type":"multiple_choice","input_config":{"options":["1","2","3","4","5","6","7"]}},{"question_id":"q2","question_text":"Buying organic food is beneficial to my health.","input_type":"multiple_choice","input_config":{"options":["1","2","3","4","5","6","7"]}},{"question_id":"q3","question_text":"I feel confident in my ability to purchase organic food if I want to.","input_type":"multiple_choice","input_config":{"options":["1","2","3","4","5","6","7"]}},{"question_id":"q4","question_text":"How do I think of the organic food?","input_type":"multiple_choice","input_config":{"options":["1","2","3","4","5","6","7"]}},{"question_id":"q5","question_text":"The decision to buy organic food is entirely up to me.","input_type":"multiple_choice","input_config":{"options":["1","2","3","4","5","6","7"]}},{"question_id":"q6","question_text":"What barriers, if any, prevent you from buying organic food?","input_type":"multiple_choice","input_config":{"options":["1","2","3","4","5","6","7"]}},{"question_id":"q7","question_text":"How do elders think of organic food?","input_type":"multiple_choice","input_config":{"options":["1","2","3","4","5","6","7"]}}]}</textarea>
+                </div>
+                
+                <!-- 3. Participant Pool CSV -->
+                <div>
+                  <h4 class="text-lg font-medium mb-2">Participant Pool CSV</h4>
+                  <textarea id="simParticipants"
+                            class="w-full h-24 p-2 border rounded-md text-gray-500"
+                            oninput="this.classList.remove('text-gray-500')">ParticipantID,Race,Gender,Age
+                    b7163744-b2b5-4a45-b333-88c6cd63146c,White,Male,24
+                    ee64c9a6-f560-41f8-b823-275cf3131668,Asian,Female,53
+                    c4c897b3-7658-4103-b88b-34425ccb8521,Asian,Female,28
+                    21b3f469-22a2-445e-bdb6-fc576f3e9232,Asian,Male,31
+                    02ab1090-e43e-4502-b6f0-4c47bab2a13e,Indigenous,Male,42</textarea>
+                </div>
+                
+              </div>
+              <button id="runSimulationBtn" class="mt-4 w-full bg-purple-600 text-white …">Run Simulation</button>
+    
                 <div id="simulatedDataResults" class="mt-6 hidden border-t pt-6">
                      <div class="flex justify-between items-center mb-2">
                         <h3 class="text-xl font-semibold">Initial Simulated Responses</h3>
