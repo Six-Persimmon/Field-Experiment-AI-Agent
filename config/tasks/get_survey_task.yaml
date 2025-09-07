@@ -6,12 +6,12 @@ get_survey:
   tool: fetch_survey
   inputs:
     survey_id:
-      description: "要获取的问卷 ID"
+      description: "Survey ID to fetch"
   outputs:
     survey:
-      description: "问卷元数据（id, title, status, 等）"
+      description: "Survey metadata (id, title, status, etc.)"
     responses:
-      description: "所有回答对象数组"
+      description: "Array of all response objects"
   expected_output: >
     A JSON object containing:
     - survey: an object with survey metadata (id, title, status, etc.)

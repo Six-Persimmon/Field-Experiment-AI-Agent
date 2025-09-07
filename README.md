@@ -13,7 +13,7 @@ AI Agent framework for conducting consumer behavior experiments.
 
 # Survey Enhancement & Deployment System
 
-## 📖 Overview
+## Overview
 
 This project provides an interactive, AI-powered survey enhancement and deployment system. First-time users can:
 
@@ -24,6 +24,18 @@ This project provides an interactive, AI-powered survey enhancement and deployme
 * Generate research papers from CSV data
 
 The system uses Pydantic models, CrewAI agents, OpenAI, Qualtrics API, and MTurk API, offering a seamless end-to-end workflow for academic and market research.
+
+## Quick Start (Recommended Entry & Flow)
+
+- Terminal entry: `python survey.py`
+  - Interactive menu to create/enhance surveys, deploy to Qualtrics/MTurk, collect simulated/human data, and generate papers. See “Terminal Usage” below.
+  - API keys via `.env` (see “API Keys”). For simulation only, set `OPENAI_API_KEY`.
+
+- Web UI: `python server.py`
+  - Starts a local web app (URL shown in terminal) to process/enhance surveys, deploy, simulate responses, and debias via browser.
+
+- Simulation only (quick demo): `python simulate_response/run_simulation.py`
+  - Uses `simulate_response/participant_pool.csv`, `simulate_response/test_survey.json`, and `simulate_response/survey_response_template.txt` to produce `simulate_response/simulated_survey_responses.csv`.
 
 ---
 
@@ -40,8 +52,16 @@ The system uses Pydantic models, CrewAI agents, OpenAI, Qualtrics API, and MTurk
 
 ```plaintext
 config/                        # YAML configs for agents and tasks
+  agents/
+    survey_convert_agent.yaml  # Convert raw text → minimal JSON (cost-efficient agent)
+    survey_editor.yaml         # Research enrichment + survey enhancement/editor
+    econometrician_agent.yaml  # End-to-end paper agent (analysis/methodology/writing)
+  tasks/
+    convert_survey_to_json.yaml        # Conversion task template
+    apply_survey_enhancements.yaml     # Research + improve survey task templates
+    enhance_survey_iteratively.yaml    # Iterative enhancement task template (with placeholders)
+    paper_tasks.yaml                   # Paper tasks (analysis, methodology, writing)
 debias/                        # Debiasing pipeline module
-field_experiment_ai_agent/     # Field experiment agent code
 knowledge/                     # Reference materials
 simulate_response/             # Survey simulation scripts and templates
 test_survey/                   # Sample survey JSON files
@@ -57,6 +77,17 @@ survey_logic.py                # Necessary logic from survey.py used for backend
 requirements.txt               # Python dependencies list
 README.md                      # Project overview and instructions
 ```
+
+Agents
+- survey_convert_agent.yaml: Converts raw text to minimal JSON using a cost-efficient model; avoids content rewriting.
+- survey_editor.yaml: Enriches context via brief research and enhances/annotates surveys to meet academic standards.
+- econometrician_agent.yaml: Executes analysis, methodology, and writing for research papers with journal-level rigor.
+
+Tasks
+- convert_survey_to_json.yaml: Converts raw text to a structured survey JSON schema.
+- apply_survey_enhancements.yaml: Includes research_task (context enrichment) and improve_survey (annotated + revised survey).
+- enhance_survey_iteratively.yaml: Iterative enhancement based on user feedback; outputs revised_survey and explanations.
+- paper_tasks.yaml: Templates for analysis_task, methodology_task, and writing_task for end-to-end paper generation.
 
 **Configuration Files:**
 
@@ -173,6 +204,13 @@ python survey.py
 
 ---
 
+## Research Paper Agent
+
+- An econometrician agent executes the full paper workflow end-to-end: analysis, methodology, and writing.
+- Focuses on econometric rigor, clear exposition, appropriate visualization, and journal-ready structure aligned with top Economics (Top 5) and Management (UTD 24) venues.
+- Tasks remain modular (analysis → methodology → writing) but are handled by a single, specialized agent for coherence and consistency.
+
+
 # HTML Usage
 
 ## Running the Website
@@ -263,4 +301,3 @@ Please click the last link that says "Running on ..."
    * Input: Path to CSV file.
    * Optional: Provide a research hypothesis.
    * Output: Markdown-formatted paper saved as `.md` file.
-

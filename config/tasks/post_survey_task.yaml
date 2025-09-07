@@ -7,23 +7,22 @@ post_survey:
   tool: publish_survey
   inputs:
     survey_definition:
-      description: "Typeform 表单定义 JSON"
+      description: "Survey definition JSON (e.g., Qualtrics/Typeform)"
   outputs:
     id:
-      description: "新发布问卷的唯一标识符"
+      description: "Unique identifier of the newly published survey"
     title:
-      description: "问卷标题"
+      description: "Survey title"
     status:
-      description: "发布状态（例如 “live”）"
+      description: "Publication status (e.g., 'live')"
     created_at:
-      description: "发布时间戳"
+      description: "Publication timestamp"
   expected_output: >
     A JSON object confirming successful deployment, including at minimum:
     - id: the unique identifier of the newly published survey
-    - title: the survey’s title
+    - title: the survey's title
     - status: publication status (e.g. “live”)
     - created_at: timestamp of publication
-
 
 
 

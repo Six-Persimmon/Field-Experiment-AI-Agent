@@ -238,9 +238,9 @@ class SurveyEnhancementFlow:
 
     def __init__(self):
         """Initialize the enhancement flow"""
-        self.convert_agent, self.editor_agent, self.enhancement_agent = self._load_agents()
+        self.convert_agent, self.editor_agent = self._load_agents()
         self.convert_task, self.research_task, self.improve_task, self.enhancement_task = self._load_tasks(
-            self.convert_agent, self.editor_agent, self.enhancement_agent
+            self.convert_agent, self.editor_agent
         )
         self.survey_dict = None
         self.enhanced_dict = None
@@ -268,18 +268,7 @@ class SurveyEnhancementFlow:
             allow_delegation=edit_cfg.get("allow_delegation", False)
         )
 
-        enhancement_agent = Agent(
-            name="Survey Enhancement Agent",
-            role="Survey Enhancement Agent",
-            goal="To improve survey design by incorporating user feedback in an iterative process",
-            backstory="I am an AI assistant specialized in survey design and enhancement. "
-                      "I work iteratively with users to refine surveys until they perfectly match the user's needs and standards. "
-                      "I'm trained in best practices for survey design, question construction, and cognitive psychology to ensure surveys are effective, unbiased, and generate valuable data.",
-            verbose=True,
-            allow_delegation=False
-        )
-
-        return convert_agent, editor_agent, enhancement_agent
+        return convert_agent, editor_agent
 
     def _load_yaml(self, path: str) -> dict:
         """Load YAML configuration file"""
@@ -306,7 +295,7 @@ class SurveyEnhancementFlow:
             else:
                 return {}
 
-    def _load_tasks(self, convert_agent, editor_agent, enhancement_agent):
+    def _load_tasks(self, convert_agent, editor_agent):
         """Load the tasks for the survey enhancement flow"""
         conv_t = self._load_yaml("config/tasks/convert_survey_to_json.yaml").get("convert_survey_to_json", {})
         convert_task = Task(
@@ -328,7 +317,7 @@ class SurveyEnhancementFlow:
         research_task = Task(
             name="research_task",
             description=description,
-            agent=convert_agent,
+            agent=editor_agent,
             expected_output=expected_output,
             output_format=OutputFormat.JSON
         )
@@ -391,22 +380,12 @@ Your tasks:
             output_format=OutputFormat.JSON
         )
 
+        enh_t = self._load_yaml("config/tasks/enhance_survey_iteratively.yaml").get("enhance_survey_iteratively", {})
         enhancement_task = Task(
             name="enhance_survey_iteratively",
-            description=(
-                "Review and enhance the EXACT survey provided in the 'original_survey' field. "
-                "DO NOT generate a new survey from scratch or use a default template. "
-                "IMPORTANT: Your task is to improve the specific questions and structure of THIS EXACT PROVIDED SURVEY "
-                "based on the user's feedback. Make specific modifications to improve question clarity, "
-                "reduce bias, and align with best practices in survey methodology. "
-                "Maintain the same general topic and purpose of the survey. "
-                "Provide detailed explanations of changes made in an 'explanations' section."
-            ),
-            agent=enhancement_agent,
-            expected_output=(
-                "A JSON object containing the enhanced survey with the SAME STRUCTURE as the input but with "
-                "improvements based on feedback. Include explanations for each change."
-            ),
+            description=enh_t.get("description", "Review and enhance the provided survey JSON."),
+            agent=editor_agent,
+            expected_output=enh_t.get("expected_output", "A JSON object containing 'revised_survey' and 'explanations'."),
             output_format=OutputFormat.JSON
         )
 
@@ -721,16 +700,21 @@ Your tasks:
                 ```
                 """
 
+                # Reload template and format with dynamic content
+                enh_t = self._load_yaml("config/tasks/enhance_survey_iteratively.yaml").get("enhance_survey_iteratively", {})
+                description_template = enh_t.get("description", "")
+                enhanced_task_description = description_template.replace("{survey_json_to_enhance}", survey_json_to_enhance).replace("{user_feedback}", user_feedback)
+
                 enhancement_task = Task(
                     name="enhance_survey_iteratively",
                     description=enhanced_task_description,
-                    agent=self.enhancement_agent,
+                    agent=self.editor_agent,
                     expected_output="A single JSON object containing the 'revised_survey' and 'explanations' keys.",
                     output_format=OutputFormat.JSON
                 )
 
                 enhancement_crew = Crew(
-                    agents=[self.enhancement_agent],
+                    agents=[self.editor_agent],
                     tasks=[enhancement_task],
                     process=Process.sequential,
                     verbose=True
@@ -2197,65 +2181,63 @@ def generate_research_paper():
         7.  **Conclusion:** A brief summary of the key discoveries.
         """
 
-    # 4. Define CrewAI Agents
-    data_analyst = Agent(
-        role='Expert Data Analyst',
-        goal=analyst_goal,
-        backstory="""You are a meticulous data analyst with a Ph.D. in statistics. You are renowned for your ability to
-        distill complex datasets into clear, actionable insights for academic publications. You are adept at performing
-        descriptive statistics, correlation analyses, and group comparisons.""",
-        verbose=True,
-        allow_delegation=False
-    )
+    # 4. Define CrewAI Agent (Econometrician – handles all writing tasks)
+    try:
+        with open('config/agents/econometrician_agent.yaml', 'r', encoding='utf-8') as f:
+            econ_cfg_all = yaml.safe_load(f) or {}
+    except FileNotFoundError:
+        econ_cfg_all = {}
 
-    research_methodologist = Agent(
-        role='Academic Research Methodologist',
-        goal="""Based on the data analysis, construct a sound and plausible 'Methodology' section for a research paper.
-        This section should be detailed enough to appear credible and reproducible.""",
-        backstory="""You are a university professor with over 20 years of experience in designing research studies
-        and writing for top-tier academic journals. You can reverse-engineer a methodology from a dataset and analysis,
-        making logical assumptions about participants, materials, and procedures.""",
-        verbose=True,
-        allow_delegation=False
-    )
-
-    academic_writer = Agent(
-        role='Lead Academic Writer',
-        goal="""Synthesize the data analysis and methodology into a complete, well-structured, and coherent
-        academic research paper, ready for submission to a peer-reviewed journal.""",
-        backstory="""You are a professional academic writer with a gift for storytelling with data. You can take
-        disparate pieces of information—a data analysis, a methods section, a hypothesis—and weave them into a
-        compelling narrative. Your writing is clear, concise, and follows the IMRaD (Introduction, Methods,
-        Results, and Discussion) structure flawlessly.""",
-        verbose=True,
-        allow_delegation=False
+    econ_cfg = (econ_cfg_all.get('econometrician_agent') or {})
+    econometrician_agent = Agent(
+        name=econ_cfg.get('name', 'Econometrician Agent'),
+        role=econ_cfg.get('role', 'Econometrician & Research Writer'),
+        goal=econ_cfg.get('goal', analyst_goal),
+        backstory=econ_cfg.get('backstory', 'A seasoned econometrician proficient in methodology, modeling, and academic writing.'),
+        verbose=econ_cfg.get('verbose', True),
+        allow_delegation=econ_cfg.get('allow_delegation', False)
     )
 
     # 5. Define Tasks
+    # Load paper task templates from YAML and format
+    paper_cfg = flow = None
+    try:
+        paper_cfg = yaml.safe_load(open('config/tasks/paper_tasks.yaml','r',encoding='utf-8')) or {}
+    except Exception:
+        paper_cfg = {}
+
+    if hypothesis:
+        analysis_focus = f"Hypothesis-driven analysis focusing on: {hypothesis}"
+    else:
+        analysis_focus = "Exploratory analysis to discover patterns and relationships."
+
+    a_t = (paper_cfg.get('analysis_task') or {})
+    m_t = (paper_cfg.get('methodology_task') or {})
+    w_t = (paper_cfg.get('writing_task') or {})
+
     analysis_task = Task(
-        description=analysis_task_description,
-        agent=data_analyst,
-        expected_output="""A markdown report detailing the data analysis. It must contain tables, statistical results, and a summary of key findings/patterns."""
+        description=(a_t.get('description','').replace('{analysis_focus}', analysis_focus).replace('{data_summary}', data_summary) or analysis_task_description),
+        agent=econometrician_agent,
+        expected_output=a_t.get('expected_output', "A markdown report detailing the analysis.")
     )
 
     methodology_task = Task(
-        description=methodology_task_description,
-        agent=research_methodologist,
-        context=[analysis_task], # This task depends on the analysis_task
-        expected_output="A complete, well-written 'Methodology' section in markdown format."
+        description=m_t.get('description', methodology_task_description),
+        agent=econometrician_agent,
+        context=[analysis_task],
+        expected_output=m_t.get('expected_output', "A complete, well-written 'Methodology' section in markdown format.")
     )
 
     writing_task = Task(
-        description=writing_task_description,
-        agent=academic_writer,
-        context=[analysis_task, methodology_task], # This task depends on the previous two
-        expected_output="""A complete research paper in a single markdown file. It must include all sections: Title, Abstract,
-        Introduction, Methodology, Results, Discussion, and Conclusion. The paper should be polished and coherent."""
+        description=w_t.get('description', writing_task_description),
+        agent=econometrician_agent,
+        context=[analysis_task, methodology_task],
+        expected_output=w_t.get('expected_output', "A single markdown document containing the full paper.")
     )
 
     # 6. Instantiate and Run the Crew
     paper_crew = Crew(
-        agents=[data_analyst, research_methodologist, academic_writer],
+        agents=[econometrician_agent],
         tasks=[analysis_task, methodology_task, writing_task],
         process=Process.sequential,
         verbose=True
