@@ -11,6 +11,12 @@ from datetime import datetime
 from typing import Literal, Dict, List, Any, Union, Optional
 from pydantic import BaseModel, ValidationError, Field, field_validator
 from crewai import Agent, Task, Crew, Process
+from knowledge_sources import (
+    initial_crew_knowledge,
+    enhancement_crew_knowledge,
+    paper_crew_knowledge,
+    attach_knowledge_to_crew,
+)
 from crewai.tasks.task_output import OutputFormat
 
 import sys
@@ -413,12 +419,19 @@ Your tasks:
             'current_year': current_year
         }
 
-        initial_crew = Crew(
+        # Instantiate Crew with knowledge if the installed CrewAI supports it
+        _crew_kwargs = dict(
             agents=[self.convert_agent, self.editor_agent],
             tasks=[self.convert_task, self.research_task, self.improve_task],
             process=Process.sequential,
-            verbose=True
+            verbose=True,
         )
+        try:
+            initial_crew = Crew(knowledge=initial_crew_knowledge, **_crew_kwargs)
+        except TypeError:
+            # Older CrewAI without 'knowledge' kwarg
+            initial_crew = Crew(**_crew_kwargs)
+            attach_knowledge_to_crew(initial_crew, initial_crew_knowledge)
 
         print("\n=== Running Initial Survey Processing ===")
         crew_result = initial_crew.kickoff(inputs=task_inputs)
@@ -713,12 +726,17 @@ Your tasks:
                     output_format=OutputFormat.JSON
                 )
 
-                enhancement_crew = Crew(
+                _enh_kwargs = dict(
                     agents=[self.editor_agent],
                     tasks=[enhancement_task],
                     process=Process.sequential,
-                    verbose=True
+                    verbose=True,
                 )
+                try:
+                    enhancement_crew = Crew(knowledge=enhancement_crew_knowledge, **_enh_kwargs)
+                except TypeError:
+                    enhancement_crew = Crew(**_enh_kwargs)
+                    attach_knowledge_to_crew(enhancement_crew, enhancement_crew_knowledge)
                 
                 print("\n=== Running AI Enhancement ===")
                 # We no longer need a complex input dictionary, as everything is in the task description.
@@ -2236,12 +2254,17 @@ def generate_research_paper():
     )
 
     # 6. Instantiate and Run the Crew
-    paper_crew = Crew(
+    _paper_kwargs = dict(
         agents=[econometrician_agent],
         tasks=[analysis_task, methodology_task, writing_task],
         process=Process.sequential,
-        verbose=True
+        verbose=True,
     )
+    try:
+        paper_crew = Crew(knowledge=paper_crew_knowledge, **_paper_kwargs)
+    except TypeError:
+        paper_crew = Crew(**_paper_kwargs)
+        attach_knowledge_to_crew(paper_crew, paper_crew_knowledge)
 
     print("\n Kicking off the Research Paper Generation Crew... This may take several minutes.")
     result = paper_crew.kickoff()
