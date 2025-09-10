@@ -4,12 +4,7 @@ AI Agent framework for conducting consumer behavior experiments.
 
 **Authors:**
 
-* Xiao Liu (Associate Professor, NYU) [xl23@stern.nyu.edu](mailto:xl23@stern.nyu.edu)
-* Shijian Liu (PhD, NYU) [sl9818@stern.nyu.edu](mailto:sl9818@stern.nyu.edu)
-* Jiayu Li (PhD, NYU) [jl15681@stern.nyu.edu](mailto:jl15681@stern.nyu.edu)
-* Manlu Ouyang (PhD, NYU) [mo2615@stern.nyu.edu](mailto:mo2615@stern.nyu.edu)
-* Sichen Zhong (RA, NYU) [sz4972@nyu.edu](mailto:sz4972@nyu.edu)
-* Qianyu Zhang (RA, NYU) [qz1104@nyu.edu](mailto:qz1104@nyu.edu)
+XXX
 
 # Survey Enhancement & Deployment System
 
