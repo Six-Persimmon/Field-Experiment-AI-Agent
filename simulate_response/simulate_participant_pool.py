@@ -25,78 +25,85 @@ allowed_races = {
 
 allowed_genders = ["Male", "Female"]
 
+def prompt_with_default(prompt: str, default, caster):
+    """Prompt user with a default; empty input returns default."""
+    raw = input(f"{prompt} (default: {default}): ").strip()
+    if raw == "":
+        return default
+    try:
+        return caster(raw)
+    except Exception:
+        print("Invalid input. Using default.")
+        return default
+
+
 # === Step 2: Get yes/no for race distribution ===
 print("Do you want a balanced race distribution among the five races?")
 for k, v in allowed_races.items():
-    print(f"  {k} → {v}")
+    print(f"  {k} -> {v}")
 
-while True:
-    use_balanced = input("Enter 'yes' for balanced or 'no' to specify custom percentages: ").strip().lower()
-    if use_balanced in ['yes', 'no']:
-        break
-    print("Please enter 'yes' or 'no'.")
+use_balanced = prompt_with_default(
+    "Enter 'yes' for balanced or 'no' to specify custom percentages",
+    default="yes",
+    caster=lambda s: s.lower()
+)
+use_balanced = "yes" if use_balanced not in ["yes", "no"] else use_balanced
 
 # === Step 3: Get race percentages ===
 if use_balanced == 'yes':
     race_dist = {k: 1.0 / len(allowed_races) for k in allowed_races}
 else:
-    print("\n📊 Please enter race percentages (0 - 100).")
+    print("\nPlease enter race percentages (0 - 100). Press Enter to accept default 20% each.")
     race_raw = {}
     for label in allowed_races:
-        while True:
-            try:
-                percent = float(input(f"How much percentage do you want for {allowed_races[label]}? "))
-                if percent < 0:
-                    raise ValueError
-                race_raw[label] = percent
-                break
-            except ValueError:
-                print("Please enter a valid non-negative number.")
+        percent = prompt_with_default(
+            f"How much percentage do you want for {allowed_races[label]}?",
+            default=100.0 / len(allowed_races),
+            caster=float,
+        )
+        if percent < 0:
+            print("Negative value provided. Using 0.")
+            percent = 0.0
+        race_raw[label] = percent
     total = sum(race_raw.values())
-    if abs(total - 100) > 1e-2:
+    if abs(total - 100) > 1e-2 and total > 0:
         print("Percentages do not sum to 100. Normalizing automatically...")
-    race_dist = {k: v / total for k, v in race_raw.items()}
+    race_dist = {k: (v / total if total > 0 else 1.0 / len(allowed_races)) for k, v in race_raw.items()}
 
 # === Step 4: Get gender percentages ===
-print("\n Please enter gender percentages (0 - 100).")
+print("\nPlease enter gender percentages (0 - 100). Press Enter to accept default 50/50.")
 gender_raw = {}
 for gender in allowed_genders:
-    while True:
-        try:
-            percent = float(input(f"How much percentage do you want for {gender}? "))
-            if percent < 0:
-                raise ValueError
-            gender_raw[gender] = percent
-            break
-        except ValueError:
-            print("Please enter a valid non-negative number.")
+    percent = prompt_with_default(
+        f"How much percentage do you want for {gender}?",
+        default=100.0 / len(allowed_genders),
+        caster=float,
+    )
+    if percent < 0:
+        print("Negative value provided. Using 0.")
+        percent = 0.0
+    gender_raw[gender] = percent
 total = sum(gender_raw.values())
-if abs(total - 100) > 1e-2:
+if abs(total - 100) > 1e-2 and total > 0:
     print("Percentages do not sum to 100. Normalizing automatically...")
-gender_dist = {k: v / total for k, v in gender_raw.items()}
+gender_dist = {k: (v / total if total > 0 else 1.0 / len(allowed_genders)) for k, v in gender_raw.items()}
 
 # === Step 5: Age range ===
 while True:
-    try:
-        age_min = int(input("\nEnter minimum age (e.g., 18): "))
-        age_max = int(input("Enter maximum age (e.g., 65): "))
-        if age_min >= age_max:
-            print("Minimum age must be less than maximum age.")
-            continue
-        break
-    except ValueError:
-        print("Please enter valid integers.")
+    age_min = prompt_with_default("\nEnter minimum age", default=18, caster=int)
+    age_max = prompt_with_default("Enter maximum age", default=65, caster=int)
+    if age_min >= age_max:
+        print("Minimum age must be less than maximum age.")
+        continue
+    break
 
 # === Step 6: Number of participants ===
 while True:
-    try:
-        num_participants = int(input("\nEnter number of participants to generate: "))
-        if num_participants <= 0:
-            print("Number must be positive.")
-            continue
-        break
-    except ValueError:
-        print("Please enter a valid integer.")
+    num_participants = prompt_with_default("\nEnter number of participants to generate", default=42, caster=int)
+    if num_participants <= 0:
+        print("Number must be positive.")
+        continue
+    break
 
 # === Step 7: Generate participants ===
 participants = []
@@ -126,4 +133,4 @@ output_path = os.path.join(script_dir, "participant_pool.csv")
 # Save the file
 df.to_csv(output_path, index=False)
 
-print(f"\n✅ Participant pool saved to: {output_path}")
+print(f"\nParticipant pool saved to: {output_path}")

@@ -2213,7 +2213,8 @@ def generate_research_paper():
         goal=econ_cfg.get('goal', analyst_goal),
         backstory=econ_cfg.get('backstory', 'A seasoned econometrician proficient in methodology, modeling, and academic writing.'),
         verbose=econ_cfg.get('verbose', True),
-        allow_delegation=econ_cfg.get('allow_delegation', False)
+        allow_delegation=econ_cfg.get('allow_delegation', False),
+        allow_code_execution=econ_cfg.get('allow_code_execution', False)
     )
 
     # 5. Define Tasks
