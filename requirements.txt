@@ -15,6 +15,7 @@ matplotlib
 seaborn
 PyPDF2
 scipy
+scikit-learn
 pyyaml
 openpyxl
 anthropic
